@@ -7,10 +7,10 @@
 list2array(list_in)
 }
 \arguments{
-\item{list_in}{a list with n elements of dimensions [m x m].}
+\item{list_in}{a list with n elements of dimensions [n x m].}
 }
 \value{
-array_out an array of dimensions [m x m x n].
+array_out an array of dimensions [n x m x p].
 }
 \description{
 \code{list2array} uses abind to reshape a list of same-dimension graphs to

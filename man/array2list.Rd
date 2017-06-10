@@ -7,10 +7,10 @@
 array2list(list_in)
 }
 \arguments{
-\item{array_out}{an array of dimensions [m x m x n].}
+\item{array_out}{an array of dimensions [n x m x p].}
 }
 \value{
-list_in a list with n elements of dimensions [m x m].
+list_in a list with n elements of dimensions [n x m].
 }
 \description{
 \code{array2list} uses plyr to reshape an array of same-dimensional graphs
