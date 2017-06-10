@@ -1,0 +1,14 @@
+Package: wssg
+Title: Weighted Signal Subgraphs
+Version: 0.0.0.1
+Authors@R: person("Eric", "Bridgeford", email="ericwb95@gmail.com", role=c('aut', 'cre'))
+Description: This package develops a model for the identification of the most\n significant edges given connectomes of arbitrary class labels. We extend\n this model for for classification of connectomes.
+Depends: R (>= 3.3.1)
+License: APLv2
+Encoding: UTF-8
+LazyData: true
+BugReports: https://github.com/neurodata/wssg/issues
+Imports:
+    plyr,
+    abind
+RoxygenNote: 6.0.1
