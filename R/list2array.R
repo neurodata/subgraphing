@@ -3,8 +3,8 @@
 #' \code{list2array} uses abind to reshape a list of same-dimension graphs to
 #' an array. Takes from list[[listels]] to array[,,length(listels)].
 #'
-#' @param list_in a list with n elements of dimensions [m x m].
-#' @return array_out an array of dimensions [m x m x n].
+#' @param list_in a list with n elements of dimensions [n x m].
+#' @return array_out an array of dimensions [n x m x p].
 #' @examples
 #' test <- list()
 #' test[[1]] <- matrix(1:35, nrow=5, ncol=7)
