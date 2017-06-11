@@ -102,9 +102,90 @@ sample_beta_graph(alpha, beta, p):
 
 # Simulations
 
-## Graph Sampling Obeys LLN
+## Evaluation
+
+### Mean Squared Error
+
+When assessing the difference between two functions, we will frequently use the mean-squared error:
+
+\begin{align*}
+  MSE(\hat{y}, y) = \frac{1}{n}\sum_{i=1}^n (\hat{y}_i - y)^2
+\end{align*}
+
+where $\hat{y} \in \mathbb{R}^b$ is an $n$ element estimator for the function $y \in \mathbb{R}^n$.
+
+### Frobenius Norm of Difference
+
+When evaluating the similarity of two matrices, we will use the frobenius norm of the difference:
+
+\begin{align*}
+  ||X - Y||_F = \sqrt{\sum_{i=1}^n \sum_{j=1}^n |x_{ij} - y_{ij}|^2} = \sqrt{tr((X - Y)^*(X - Y))}
+\end{align*}
+
+## Convergence to True Distribution of Sampled Graphs
 
 First, we will generate some simulation data using our $sample_beta_graph()$ function, and we will check whether the data is properly distributed. We will repeatedly use this function in this and later notebooks, so it will be critical for this function to work properly.
+
+
+### Visualization
+
+First, we will begin with a qualitative evaluation of the distribution of our 6 edges with respect to the true distribution with a small number of sampled graphs (100) and a large number of sampled graphs (1000). We expect that with a larger number of sampled graphs, we should get qualitatively better estimated distributions.
+
+```{r fig.height=6, fig.width=8, warning=FALSE, message=FALSE}
+require(wssg)
+require(ggplot2)
+require(reshape2)
+library(MASS)
+library(scales)
+require(Rmisc)
+
+lseq <- function(from, to, n) {
+  return(round(exp(seq(log(from), log(to), length.out = n))))
+}
+mse <- function(x, y) {
+  return(mean((x - y)^2))
+}
+
+xdim <- 2
+ydim <- 3
+alpha <- array(runif(6, min=.5, max=5), dim=c(xdim, ydim))  # true alpha
+beta <- array(runif(6, min=.5, max=5), dim=c(xdim, ydim))  # true beta
+n_vec <- c(100, 1000)
+n_spaces <- length(n_vec)
+n_bin <- 15
+edge_err <- array(NaN, dim=c(xdim, ydim, n_spaces))  # the error per edge per iteration
+err <- array(NaN, dim=c(n_spaces))  # the average error per iteration
+hist_breaks <- seq(0, 1, length.out=n_bin)  # beta distr btwn 0 and 1
+
+for (k in 1:length(n_vec)) {
+  edge_distr_plots <- list()
+  n <- n_vec[k]
+  samp <- sample_beta_graph(alpha, beta, n)
+  counter <- 1
+  for (i in 1:xdim) {
+    for (j in 1:ydim) {
+      hsamp <- hist(samp[i, j,], breaks=hist_breaks, plot=FALSE)
+      true <- dbeta(hsamp$mids, alpha[i, j], beta[i, j])
+      edge_err[i, j, k] <- mse(hsamp$density, true)
+      plot_data <- data.frame(x=hsamp$mids,
+                              class=c(rep("yhat", length(hsamp$density)),
+                                      rep("y", length(true))),
+                              y=c(hsamp$density, true))
+      edge_distr_plots[[counter]] <- ggplot(plot_data, aes(x=x, y=y, group=class, color=class)) +
+        geom_line() +
+        xlab('X') +
+        ylab('Density') +
+        ggtitle(sprintf('Edge (%d, %d), MSE=%.3f', i, j, edge_err[i, j, k])) +
+        theme(text=element_text(size=10))
+      counter <- counter + 1
+    }
+  }
+  multiplot(plotlist=edge_distr_plots, layout=matrix(1:length(edge_distr_plots), nrow=xdim, byrow=TRUE))
+}
+
+```
+
+### Simulation
 
 For this simulation, we will do as follows:
 
@@ -113,11 +194,45 @@ For this simulation, we will do as follows:
 + Show the average MSE (average over all of the edges) between the density estimation per edge and the true density function per edge approaches 0 as $n \rightarrow \infty$ as a function of n.
 + Show 100 number of samples histogram from a randomly selected edge, and show 1000 samples histogram from a randomly selected edge, with respect to the true distribution.
 
-We know that by the LLN, if we sample a large number of values our sample density should approximate to the true density better and better, and this simulation checks that this property is satisfied.
+We know that by convergence, if we sample a large number of values our sample density should approximate to the true density better and better, and this simulation checks that this property is satisfied.
 
 ```{r }
+n_vec <- lseq(50, 5000, 20)
+n_spaces <- length(n_vec)
+edge_err <- array(NaN, dim=c(xdim, ydim, n_spaces))  # the error per edge per iteration
+err <- array(NaN, dim=c(n_spaces))  # the average error per iteration
+for (k in 1:length(n_vec)) {
+  n <- n_vec[k]
+  samp <- sample_beta_graph(alpha, beta, n)
+  for (i in 1:xdim) {
+    for (j in 1:ydim) {
+      hsamp <- hist(samp[i, j,], breaks=hist_breaks, plot=FALSE)
+      edge_err[i, j, k] <- mse(hsamp$density, dbeta(hsamp$mids, alpha[i, j], beta[i, j]))
+    }
+  }
+  err[k] <- mean(edge_err[,,k])
+}
 
+base_breaks <- function(n = 10){
+    function(x) {
+        axisTicks(log10(range(x, na.rm = TRUE)), log = TRUE, n = n)
+    }
+}
+
+results <- data.frame(n=n_vec, error=err)
+err_plot <- ggplot(results, aes(x=n, y=error)) +
+  geom_point(size=3) +
+  scale_x_log10(labels=trans_format("log10", math_format(10^.x)), breaks=trans_breaks("log10", function(x) 10^x, n=4)) +
+  xlab('Number of Samples') +
+  ylab('Average edge-wise MSE') +
+  ggtitle('Analalyzing convergence of Samples to Truths') +
+  theme(text=element_text(size=12))
+err_plot + annotation_logticks(base = 10)
 ```
+
+As we can see above, our edge-wise MSE drops off exponentially as the number of samples increases.
+
+
 ## Estimation is Consistent
 
 Here, we will verify that our estimator converges for arbitrary random alpha, beta as our number of samples increases, given that our sampling code is correct (see previous section and test code). We are using the method of moments estimators for alpha and beta, and while the method of moments estimators might not necessarily converge as rapidly to the true parameters as the maximum likelihood estimators, they are still consistent.
