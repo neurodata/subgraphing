@@ -148,8 +148,8 @@ mse <- function(x, y) {
 
 xdim <- 3
 ydim <- 2
-alpha <- array(runif(6, min=.5, max=5), dim=c(xdim, ydim))  # true alpha
-beta <- array(runif(6, min=.5, max=5), dim=c(xdim, ydim))  # true beta
+alpha <- array(runif(xdim*ydim, min=.5, max=5), dim=c(xdim, ydim))  # true alpha
+beta <- array(runif(xdim*ydim, min=.5, max=5), dim=c(xdim, ydim))  # true beta
 n_vec <- c(100, 5000)
 n_spaces <- length(n_vec)
 n_bin <- 15
@@ -239,7 +239,7 @@ Here, we will verify that our estimator converges for arbitrary random alpha, be
 
 ### Visualization
 
-We begin by plotting the estimated alpha, beta and compare to the true alpha, beta for 100 and 5000 observed samples respectively. Due to the fact that the method of moments produces a consistent estimator, we know that our estimated parameters should be closer to the true values with more samples.
+We begin by plotting the estimated alpha, beta and compare to the true alpha, beta for 50 and 1000 observed samples respectively. Due to the fact that the method of moments produces a consistent estimator, we know that our estimated parameters should be closer to the true values with more samples.
 
 ```{r fig.width=8}
 jet.colors <- colorRampPalette(c("#00007F", "blue", "#007FFF", "cyan", "#7FFF7F",
@@ -256,21 +256,15 @@ plot_param <- function(mtx, title='Parameter', lims=c(.5, 5)) {
   return(plt)
 }
 
-xdim <- 3
-ydim <- 2
-alpha <- array(runif(6, min=.5, max=5), dim=c(xdim, ydim))  # true alpha
-beta <- array(runif(6, min=.5, max=5), dim=c(xdim, ydim))  # true beta
-n_vec <- c(100, 5000)
+alpha <- array(runif(xdim*ydim, min=.5, max=5), dim=c(xdim, ydim))  # true alpha
+beta <- array(runif(xdim*ydim, min=.5, max=5), dim=c(xdim, ydim))  # true beta
+n_vec <- c(50, 1000)
 n_spaces <- length(n_vec)
 n_bin <- 15
 edge_err <- array(NaN, dim=c(xdim, ydim, n_spaces))  # the error per edge per iteration
 err <- array(NaN, dim=c(n_spaces))  # the average error per iteration
 hist_breaks <- seq(0, 1, length.out=n_bin)  # beta distr btwn 0 and 1
 
-params <- list()
-params[[1]] <- plot_param(alpha, title='True Alpha')
-params[[2]] <- plot_param(beta, title='True Beta')
-multiplot(plotlist=params, layout=as.matrix(1:length(params), nrow=1, byrow=TRUE))
 for (k in 1:length(n_vec)) {
   edge_distr_plots <- list()
   n <- n_vec[k]
@@ -280,14 +274,17 @@ for (k in 1:length(n_vec)) {
   params <- list()
   params[[1]] <- plot_param(est$alpha, title=paste('Estimated Alpha, n=', n, sep=""))
   params[[2]] <- plot_param(est$beta, title=paste('Estimated Beta, n=', n, sep=""))
-  multiplot(plotlist=params, layout=as.matrix(1:length(params), nrow=1, byrow=TRUE))
+  multiplot(plotlist=params, layout=array(1:length(params), dim=c(1,2)))
 }
+params <- list()
+params[[1]] <- plot_param(alpha, title='True Alpha')
+params[[2]] <- plot_param(beta, title='True Beta')
+multiplot(plotlist=params, layout=array(1:length(params), dim=c(1,2)))
 ```
 
-As we can see, after 500 iterations, our estimate is much closer to the true alpha, beta than at only 100 iterations, as we would intuitively expect.
+As we can see, after 1000 samples, our estimate is much closer to the true alpha, beta than at only 50 samples, as we would intuitively expect.
 
 ### Simulation
-
 
 For this simulation, we will do as follows:
 
