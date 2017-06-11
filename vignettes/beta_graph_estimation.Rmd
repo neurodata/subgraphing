@@ -284,6 +284,8 @@ for (k in 1:length(n_vec)) {
 }
 ```
 
+As we can see, after 500 iterations, our estimate is much closer to the true alpha, beta than at only 100 iterations, as we would intuitively expect.
+
 ### Simulation
 
 
@@ -292,7 +294,7 @@ For this simulation, we will do as follows:
 + Sample n observations from a 2x3 graph RV where each edge obeys the beta distribution with parameters alpha, beta.
 + Plot frobenius norm of difference between estimated alpha and true alpha (likewise for beta) as a function of the number of samples n.
 
-Due to consistency, we expect that as n increases we should get closer and closer approximations of alpha, beta. and as such the difference between the estimated and true alpha, beta should decline. 
+Due to consistency, we expect that as n increases we should get closer and closer approximations of alpha, beta. and as such the difference (frobenius norm of the difference) between the estimated and true alpha, beta should decline. 
 
 ```{r fig.width=8}
 
