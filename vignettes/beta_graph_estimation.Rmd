@@ -56,7 +56,12 @@ Where $\mu_{uv}$ is the sample mean and $\sigma_{uv}$ is the sample standard dev
     \beta_{uv} &= \alpha_{uv} \left(\frac{1}{\mu_{uv}} - 1\right)
 \end{align*}
 
+# Pseudo Code
+
+Below is bare-bones pseudo code for each method. Note that optional parameters are omitted.
+
 ```{r eval=FALSE}
+# A function to estimate a beta distribution for each edge in a graph.
 # Inputs
 #   sample: a [n x m x p] element array, where we have p observations of nxm graphs.
 # Outputs
@@ -66,13 +71,65 @@ beta_graph_estimator(sample):
   for u in 1:n:
     for v in 1:m:
       alpha[u, v], beta[u, v] = beta_est(sample[u, v, :])  # estimate the parameters given the u, v edge from all samples
+  return alpha, beta
+
+# a function to estimate a beta distribution for a sample.
 # Inputs
 #   sample: a [p] element vector that is between 0 and 1.
 # Outputs
 #   alpha: the alpha parameter of the method of moments estimate given the sample.
 #   beta: the beta parameter of the method of moments estimate given the sample.
 beta_est(sample):
+  alpha = ((1 - mu)/sig^2 - 1/mu)*mu^2
+  beta = alpha*(1/mu - 1)
+  return alpha, beta
   
+# a function to generate random beta-distributed samples.
+# Inputs
+#   alpha: a [n x m] matrix of the alpha parameters per edge.
+#   beta: a [n x m] matrix of the beta parameters per edge.
+#   p: the number of samples.
+# Outputs
+#   samp: a [n x m x p] array sampling from the [n x m] graph RV p times.
+sample_beta_graph(alpha, beta, p):
+  for (i in 1:n) {
+    for (j in 1:m) {
+      samp[i,j,] <- rbeta(s, alpha[i, j], beta[i, j]) # samples from random beta distribution with alpha[i,j] beta[i,j]
+    }
+  }
+  return samp
 ```
 
+# Simulations
 
+## Graph Sampling Obeys LLN
+
+First, we will generate some simulation data using our $sample_beta_graph()$ function, and we will check whether the data is properly distributed. We will repeatedly use this function in this and later notebooks, so it will be critical for this function to work properly.
+
+For this simulation, we will do as follows:
+
++ Sample n observations from a 2x3 graph RV where each edge obeys the beta distribution with parameters alpha, beta.
++ Histogram bin the values into 20 bins from 0 to 1.
++ Show the average MSE (average over all of the edges) between the density estimation per edge and the true density function per edge approaches 0 as $n \rightarrow \infty$ as a function of n.
++ Show 100 number of samples histogram from a randomly selected edge, and show 1000 samples histogram from a randomly selected edge, with respect to the true distribution.
+
+We know that by the LLN, if we sample a large number of values our sample density should approximate to the true density better and better, and this simulation checks that this property is satisfied.
+
+```{r }
+
+```
+## Estimation is Consistent
+
+Here, we will verify that our estimator converges for arbitrary random alpha, beta as our number of samples increases, given that our sampling code is correct (see previous section and test code). We are using the method of moments estimators for alpha and beta, and while the method of moments estimators might not necessarily converge as rapidly to the true parameters as the maximum likelihood estimators, they are still consistent.
+
+For this simulation, we will do as follows:
+
++ Sample n observations from a 2x3 graph RV where each edge obeys the beta distribution with parameters alpha, beta.
++ Plot frobenius norm of difference between estimated alpha and true alpha (likewise for beta) as a function of the number of samples n.
++ Plot estimated alpha, beta for 100 samples and 1000 samples and compare qualitatively to the true alpha, beta.
+
+Due to consistency, we expect that as n increases we should get closer and closer approximations of alpha, beta. 
+
+```{r }
+
+```

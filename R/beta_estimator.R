@@ -14,9 +14,9 @@ beta_estimator <- function(samp) {
   if ((max(samp) > 1) || (min(samp) < 0)){
     stop('Your samp is not between 0 and 1.')
   }
-  me_samp <- mean(samp)
+  mu_samp <- mean(samp)
   sig_samp <- sd(samp)
-  alpha <- ((1 - me_samp)/sig_samp^2 - 1/me_samp)*me_samp^2
-  beta <- alpha*(1/me_samp - 1)
+  alpha <- ((1 - mu_samp)/sig_samp^2 - 1/mu_samp)*mu_samp^2
+  beta <- alpha*(1/mu_samp - 1)
   return(list(alpha=alpha, beta=beta))
 }
