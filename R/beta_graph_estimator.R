@@ -3,29 +3,32 @@
 #' \code{beta_graph_estimator} uses the method of moments to estimate the parameters of a beta
 #' distribution, alpha and beta, for a collection of graphs.
 #'
-#' @param object a list or array of graphs with arbitrary labelling.
-#'     - if object is a list, then it should have p elements of dimensions
+#' @param samp a list or array of graphs with arbitrary labelling.
+#'     - if samp is a list, then it should have s elements of dimensions
 #'         [n x m].
-#'    - if object is an array, then it should be of dimensions [n x m x p].
+#'    - if samp is an array, then it should be of dimensions [n x m x s].
 #' @return params$alpha the alpha parameter per edge. [n x m]
 #' @return params$beta the beta parameter per edge. [n x m]
 #' @examples
 #' @export
 #' @seealso \code{\link{beta_graph_estimator}}
 #'
-beta_graph_estimator <- function(sample) {
-  if(!is.list(object)) {
-    sample <- list2array(sample)  # convert to a list
+beta_graph_estimator <- function(samp) {
+  if(is.list(samp)) {
+    samp <- list2array(samp)  # convert to a list
   }
-  dims <- dim(object)
+  dims <- dim(samp)
   n <- dims[1]
   m <- dims[2]
-  p <- dims[3]
+  s <- dims[3]
   alpha <- array(NaN, dim=c(n, m))
   beta <- array(NaN, dim=c(n, m))
   for (i in 1:n) {
     for (j in 1:m) {
-      edge_params <- beta_estimator(sample[i,j,])
+      if ((max(samp[i,j,]) > 1) || (min(samp[i,j,]) < 0)){
+        stop(sprintf('Your samp is not between 0 and 1 for edge: (%d, %d)', i, j))
+      }
+      edge_params <- beta_estimator(samp[i,j,])
       alpha[i, j] <- edge_params$alpha
       beta[i, j] <- edge_params$beta
     }

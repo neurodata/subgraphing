@@ -4,13 +4,13 @@
 \alias{beta_graph_estimator}
 \title{A function to fit a beta distribution to the edges of the matrices in a graph.}
 \usage{
-beta_graph_estimator(sample)
+beta_graph_estimator(samp)
 }
 \arguments{
-\item{object}{a list or array of graphs with arbitrary labelling.
- - if object is a list, then it should have p elements of dimensions
+\item{samp}{a list or array of graphs with arbitrary labelling.
+ - if samp is a list, then it should have s elements of dimensions
      [n x m].
-- if object is an array, then it should be of dimensions [n x m x p].}
+- if samp is an array, then it should be of dimensions [n x m x s].}
 }
 \value{
 params$alpha the alpha parameter per edge. [n x m]

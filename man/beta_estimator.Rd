@@ -2,12 +2,12 @@
 % Please edit documentation in R/beta_estimator.R
 \name{beta_estimator}
 \alias{beta_estimator}
-\title{A function to fit a beta distribution to a given univariate sample of data.}
+\title{A function to fit a beta distribution to a given univariate samp of data.}
 \usage{
-beta_estimator(sample)
+beta_estimator(samp)
 }
 \arguments{
-\item{sample}{a univariate sample of values with arbitrary class labels.}
+\item{samp}{a univariate samp of values with arbitrary class labels.}
 }
 \value{
 params$alpha the alpha parameter per edge. [n x m]
@@ -16,7 +16,7 @@ params$beta the beta parameter per edge. [n x m]
 }
 \description{
 \code{beta_estimator} uses the method of moments to estimate the parameters of a beta
-distribution, alpha and beta, for a given sample.
+distribution, alpha and beta, for a given samp.
 }
 \seealso{
 \code{\link{beta_graph_estimator}}

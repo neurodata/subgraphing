@@ -1,0 +1,78 @@
+---
+title: "Beta Distributed Graph Estimation"
+author: "Eric Bridgeford"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Beta Graph Estimation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  header-includes:
+   - \usepackage{amsfonts}
+   - \usepackage{amsmath}
+   - \usepackage[linesnumbered,lined,boxed,commentsnumbered]{algorithm2e}
+---
+
+In this tutorial, we discuss our estimator of a beta distribution per edge for a given graph.
+
+# Framework
+
+## Setting
+
++ $\mathbb{G}: \Omega \rightarrow \mathcal{G}$ is a graph-valued RV with samples $G_i \sim \mathbb{G}$
++ For each $G_i \in \mathcal{G}$, we have $G_i = (V, E_i)$; that is, each $G_i$ is defined by a set of vertices $V$ and a set of edges $E_i$, where $w_i: V \times V \rightarrow \mathbb{R}$, and $e_{uv}^{(i)} \in \mathbb{R}$. That is, $w_i$ is the real-valued weight function for each graph.
++ $\mathbb{A}: \Omega \rightarrow \mathcal{A}$, a adjacency-matrix-valued RV with samples $A_i \sim \mathbb{A}$, where $\mathcal{A}$ is the space of possible adjacency-matrices and $A_i \in \mathcal{A}$.
++ $A_i \in \mathcal{A}$, and $\mathcal{A} \subseteq \mathbb{R}^{V \times V}$. 
++ Each graph $G_i$ can be represented as an adjacency-matrix $A_i$.
+
+## Statistical Goal
+
+Identify the sufficient parameters to characterize the distributions of each edge's weights.
+
+## Model
+
+Assume that the edge weights can be characterized by a beta RV; that is:
+
+\begin{align}
+  \mathbb{A}_{uv} \sim Beta(\alpha_{uv}, \beta_{uv})
+\end{align}
+
+
+# Estimators
+
+## Beta Parameters
+
+Using the method of moments, it is easy to see that:
+
+\begin{align*}
+  \mu_{uv} = \mathbb{E}_{\mathbb{A}_{uv}}[A_{uv}] = \frac{\alpha_{uv}}{\alpha_{uv} + \beta_{uv}} \\
+  \sigma_{uv}^2 = \mathbb{E}_{\mathbb{A}_{uv}}[(A_{uv} - \mu_{uv})^2] = \frac{\alpha_{uv}\beta_{uv}}{(_{uv} + \beta_{uv})^2(\alpha_{uv} + \beta_{uv} + 1)}
+\end{align*}
+
+Where $\mu_{uv}$ is the sample mean and $\sigma_{uv}$ is the sample standard deviation. Solving this system of equations for $\alpha_{uv}$ and $\beta_{uv}$, we find that:
+
+\begin{align*}
+    \alpha_{uv} &= \left(\frac{1 - \mu_{uv}}{\sigma_{uv}^2} - \frac{1}{\mu_{uv}}\right)\mu_{uv}^2 \\
+    \beta_{uv} &= \alpha_{uv} \left(\frac{1}{\mu_{uv}} - 1\right)
+\end{align*}
+
+```{r eval=FALSE}
+# Inputs
+#   sample: a [n x m x p] element array, where we have p observations of nxm graphs.
+# Outputs
+#   alpha: a [n x m] matrix denoting the alpha parameter per edge.
+#   beta: a [n x m] matrix denoting the beta parameter per edge.
+beta_graph_estimator(sample):
+  for u in 1:n:
+    for v in 1:m:
+      alpha[u, v], beta[u, v] = beta_est(sample[u, v, :])  # estimate the parameters given the u, v edge from all samples
+# Inputs
+#   sample: a [p] element vector that is between 0 and 1.
+# Outputs
+#   alpha: the alpha parameter of the method of moments estimate given the sample.
+#   beta: the beta parameter of the method of moments estimate given the sample.
+beta_est(sample):
+  
+```
+
+
