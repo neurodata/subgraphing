@@ -150,7 +150,7 @@ xdim <- 2
 ydim <- 3
 alpha <- array(runif(6, min=.5, max=5), dim=c(xdim, ydim))  # true alpha
 beta <- array(runif(6, min=.5, max=5), dim=c(xdim, ydim))  # true beta
-n_vec <- c(100, 1000)
+n_vec <- c(100, 5000)
 n_spaces <- length(n_vec)
 n_bin <- 15
 edge_err <- array(NaN, dim=c(xdim, ydim, n_spaces))  # the error per edge per iteration
@@ -180,6 +180,7 @@ for (k in 1:length(n_vec)) {
       counter <- counter + 1
     }
   }
+  print(sprintf('Edge-wise distribution plots for %d samples', n))
   multiplot(plotlist=edge_distr_plots, layout=matrix(1:length(edge_distr_plots), nrow=xdim, byrow=TRUE))
 }
 
@@ -196,7 +197,7 @@ For this simulation, we will do as follows:
 
 We know that by convergence, if we sample a large number of values our sample density should approximate to the true density better and better, and this simulation checks that this property is satisfied.
 
-```{r }
+```{r fig.width=8}
 n_vec <- lseq(50, 5000, 20)
 n_spaces <- length(n_vec)
 edge_err <- array(NaN, dim=c(xdim, ydim, n_spaces))  # the error per edge per iteration
