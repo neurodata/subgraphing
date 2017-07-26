@@ -1,6 +1,6 @@
 #' Sample Graphs from Beta Distribution
 #'
-#' \code{sample_beta_graph} A function to sample from a graph-valued RV where each edge follows a beta distribution.
+#' \code{sg.beta.sample_graph} A function to sample from a graph-valued RV where each edge follows a beta distribution.
 #'
 #' @param alpha a [n x m] matrix indicating the alphas of each edge.
 #' @param beta a [n x m] matrix indicating the betas of each edge.
@@ -13,7 +13,7 @@
 #' @export
 #' @seealso \code{\link{list2array}} \code{\link{array2list}}
 #'
-sample_beta_graph <- function(alpha, beta, s=10, type="array") {
+sg.beta.sample_graph <- function(alpha, beta, s=10, type="array") {
   dims <- dim(alpha)
   n <- dims[1]
   m <- dims[2]
