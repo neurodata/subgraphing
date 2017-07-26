@@ -1,6 +1,6 @@
 #' A function to fit a beta distribution to a given univariate samp of data.
 #'
-#' \code{beta_estimator} uses the method of moments to estimate the parameters of a beta
+#' \code{sg.beta.estimator} uses the method of moments to estimate the parameters of a beta
 #' distribution, alpha and beta, for a given samp.
 #'
 #' @param samp a univariate samp of values with arbitrary class labels.
@@ -8,9 +8,9 @@
 #' @return params$beta the beta parameter per edge. [n x m]
 #' @examples
 #' @export
-#' @seealso \code{\link{beta_graph_estimator}}
+#' @seealso \code{\link{sg.beta.graph_estimator}}
 #'
-beta_estimator <- function(samp) {
+sg.beta.estimator <- function(samp) {
   if ((max(samp) > 1) || (min(samp) < 0)){
     stop('Your samp is not between 0 and 1.')
   }

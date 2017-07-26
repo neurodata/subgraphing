@@ -1,6 +1,6 @@
 #' A function to fit a beta distribution to the edges of the matrices in a graph.
 #'
-#' \code{beta_graph_estimator} uses the method of moments to estimate the parameters of a beta
+#' \code{sg.beta.graph_estimator} uses the method of moments to estimate the parameters of a beta
 #' distribution, alpha and beta, for a collection of graphs.
 #'
 #' @param samp a list or array of graphs with arbitrary labelling.
@@ -11,11 +11,11 @@
 #' @return params$beta the beta parameter per edge. [n x m]
 #' @examples
 #' @export
-#' @seealso \code{\link{beta_graph_estimator}}
+#' @seealso \code{\link{sg.beta.estimator}}
 #'
-beta_graph_estimator <- function(samp) {
+sg.beta.graph_estimator <- function(samp) {
   if(is.list(samp)) {
-    samp <- list2array(samp)  # convert to a list
+    samp <- fmriu.list2array(samp)  # convert to a array for standardization
   }
   dims <- dim(samp)
   n <- dims[1]
@@ -28,7 +28,7 @@ beta_graph_estimator <- function(samp) {
       if ((max(samp[i,j,]) > 1) || (min(samp[i,j,]) < 0)){
         stop(sprintf('Your samp is not between 0 and 1 for edge: (%d, %d)', i, j))
       }
-      edge_params <- beta_estimator(samp[i,j,])
+      edge_params <- sg.beta.estimator(samp[i,j,])
       alpha[i, j] <- edge_params$alpha
       beta[i, j] <- edge_params$beta
     }
