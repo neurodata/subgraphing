@@ -13,9 +13,9 @@ sg.beta.graph_estimator(samp)
 - if samp is an array, then it should be of dimensions [n x m x s].}
 }
 \value{
-params$alpha the alpha parameter per edge. [n x m]
+alpha [n x m] the alpha parameter per edge.
 
-params$beta the beta parameter per edge. [n x m]
+beta [n x m] the beta parameter per edge.
 }
 \description{
 \code{sg.beta.graph_estimator} uses the method of moments to estimate the parameters of a beta

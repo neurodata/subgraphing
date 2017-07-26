@@ -13,14 +13,18 @@ vignette: >
    - \usepackage[linesnumbered,lined,boxed,commentsnumbered]{algorithm2e}
 ---
 
-In this tutorial, we discuss our estimator of a beta distribution per edge for a given graph.
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache=TRUE)
+```
+
+In this tutorial, we discuss our estimator of a bernoulli distribution per edge for a given graph.
 
 # Framework
 
 ## Setting
 
 + $\mathbb{G}: \Omega \rightarrow \mathcal{G}$ is a graph-valued RV with samples $G_i \sim \mathbb{G}$
-+ For each $G_i \in \mathcal{G}$, we have $G_i = (V, E_i)$; that is, each $G_i$ is defined by a set of vertices $V$ and a set of edges $E_i$, where $w_i: V \times V \rightarrow \mathbb{R}$, and $e_{uv}^{(i)} \in \mathbb{R}$. That is, $w_i$ is the real-valued weight function for each graph.
++ For each $G_i \in \mathcal{G}$, we have $G_i = (V, E_i)$; that is, each $G_i$ is defined by a set of vertices $V$ and a set of edges $E_i$, where $w_i: V \times V \rightarrow \mathbb{R}$, and $w_i(e_{uv}) \in \mathbb{R}$. That is, $w_i$ is the real-valued weight function for each graph.
 + $\mathbb{A}: \Omega \rightarrow \mathcal{A}$, a adjacency-matrix-valued RV with samples $A_i \sim \mathbb{A}$, where $\mathcal{A}$ is the space of possible adjacency-matrices and $A_i \in \mathcal{A}$.
 + $A_i \in \mathcal{A}$, and $\mathcal{A} \subseteq \mathbb{R}^{V \times V}$. 
 + Each graph $G_i$ can be represented as an adjacency-matrix $A_i$.
@@ -37,6 +41,14 @@ Assume that the edge weights can be characterized by a beta RV; that is:
   \mathbb{A}_{uv} \sim Beta(\alpha_{uv}, \beta_{uv})
 \end{align}
 
+where $\alpha_{uv}, \beta_{uv}$ are the parameters to the Beta distribution for edge $e_{uv}$.
+
+Then our likelihood function is simply:
+
+\begin{align}
+  L_{\mathbb{A}}(A_i; \theta) &= \prod_{(u, v) \in E_i} Beta(w_i(e_{uv}); \alpha_{uv}, \beta_{uv}) \\
+  &= \prod_{(u, v) \in E_i}  \frac{w_i(e_{uv})^{\alpha_{uv}}(1-w_i(e_{uv}))^{\beta_{uv} - 1}}{B(\alpha_{uv}, \beta_{uv})}
+\end{align}
 
 # Estimators
 
@@ -45,15 +57,15 @@ Assume that the edge weights can be characterized by a beta RV; that is:
 Using the method of moments, it is easy to see that:
 
 \begin{align*}
-  \mu_{uv} = \mathbb{E}_{\mathbb{A}_{uv}}[A_{uv}] = \frac{\alpha_{uv}}{\alpha_{uv} + \beta_{uv}} \\
-  \sigma_{uv}^2 = \mathbb{E}_{\mathbb{A}_{uv}}[(A_{uv} - \mu_{uv})^2] = \frac{\alpha_{uv}\beta_{uv}}{(_{uv} + \beta_{uv})^2(\alpha_{uv} + \beta_{uv} + 1)}
+  \hat{\mu}_{uv} &= \mathbb{E}_{\mathbb{A}_{uv}}[A_{uv}] = \frac{\hat{\alpha}_{uv}}{\hat{\alpha}_{uv} + \hat{\beta}_{uv}} \\
+  \hat{\sigma}_{uv}^2 &= \mathbb{E}_{\mathbb{A}_{uv}}[(A_{uv} - \mu_{uv})^2] = \frac{\hat{\alpha}_{uv}\hat{\beta}_{uv}}{\hat{\alpha}_{uv} + \hat{\beta}_{uv})^2(\hat{\alpha_{uv}} + \hat{\beta}_{uv} + 1)}
 \end{align*}
 
-Where $\mu_{uv}$ is the sample mean and $\sigma_{uv}$ is the sample standard deviation. Solving this system of equations for $\alpha_{uv}$ and $\beta_{uv}$, we find that:
+Where $\hat{\mu}_{uv}$ is an estimator of the sample mean and $\hat{\sigma}_{uv}$ is the estimator of the sample standard deviation of our weights $\{w_i(e_{uv})\}_{i=1}^n$. Solving this system of equations for $\alpha_{uv}$ and $\beta_{uv}$, we find that:
 
 \begin{align*}
-    \alpha_{uv} &= \left(\frac{1 - \mu_{uv}}{\sigma_{uv}^2} - \frac{1}{\mu_{uv}}\right)\mu_{uv}^2 \\
-    \beta_{uv} &= \alpha_{uv} \left(\frac{1}{\mu_{uv}} - 1\right)
+    \hat{\alpha}_{uv} &= \left(\frac{1 - \hat{\mu_{uv}}}{\hat{\sigma}_{uv}^2} - \frac{1}{\hat{\mu}_{uv}}\right)\hat{\mu}_{uv}^2 \\
+    \hat{\beta}_{uv} &= \hat{\alpha}_{uv} \left(\frac{1}{\hat{\mu_{uv}}} - 1\right)
 \end{align*}
 
 # Pseudo Code
@@ -63,11 +75,11 @@ Below is bare-bones pseudo code for each method. Note that optional parameters a
 ```{r eval=FALSE}
 # A function to estimate a beta distribution for each edge in a graph.
 # Inputs
-#   sample: a [n x m x p] element array, where we have p observations of nxm graphs.
+#   sample: a [n x m x s] element array, where we have s observations of nxm graphs.
 # Outputs
 #   alpha: a [n x m] matrix denoting the alpha parameter per edge.
 #   beta: a [n x m] matrix denoting the beta parameter per edge.
-beta_graph_estimator(sample):
+sg.beta.graph_estimator(sample):
   for u in 1:n:
     for v in 1:m:
       alpha[u, v], beta[u, v] = beta_est(sample[u, v, :])  # estimate the parameters given the u, v edge from all samples
@@ -75,11 +87,11 @@ beta_graph_estimator(sample):
 
 # a function to estimate a beta distribution for a sample.
 # Inputs
-#   sample: a [p] element vector that is between 0 and 1.
+#   sample: a [s] element vector that is between 0 and 1.
 # Outputs
 #   alpha: the alpha parameter of the method of moments estimate given the sample.
 #   beta: the beta parameter of the method of moments estimate given the sample.
-beta_est(sample):
+sg.beta.estimator(sample):
   alpha = ((1 - mu)/sig^2 - 1/mu)*mu^2
   beta = alpha*(1/mu - 1)
   return alpha, beta
@@ -91,7 +103,7 @@ beta_est(sample):
 #   p: the number of samples.
 # Outputs
 #   samp: a [n x m x p] array sampling from the [n x m] graph RV p times.
-sample_beta_graph(alpha, beta, p):
+sg.beta.sample_graph(alpha, beta, p):
   for (i in 1:n) {
     for (j in 1:m) {
       samp[i,j,] <- rbeta(s, alpha[i, j], beta[i, j]) # samples from random beta distribution with alpha[i,j] beta[i,j]
@@ -122,17 +134,16 @@ When evaluating the similarity of two matrices, we will use the frobenius norm o
   ||X - Y||_F = \sqrt{\sum_{i=1}^n \sum_{j=1}^n |x_{ij} - y_{ij}|^2} = \sqrt{tr((X - Y)^*(X - Y))}
 \end{align*}
 
-## Convergence to True Distribution of Sampled Graphs
+##Sampled Edge-weights Converge to True Distribution
 
-First, we will generate some simulation data using our $sample_beta_graph()$ function, and we will check whether the data is properly distributed. We will repeatedly use this function in this and later notebooks, so it will be critical for this function to work properly.
-
+First, we will generate some simulation data using our `sg.beta.sample_graph` function, and we will check whether the data is properly distributed. We will repeatedly use this function in this and later notebooks, so it will be critical for this function to work properly.
 
 ### Visualization
 
 First, we will begin with a qualitative evaluation of the distribution of our 6 edges with respect to the true distribution with a small number of sampled graphs (100) and a large number of sampled graphs (5000). We expect that with a larger number of sampled graphs, we should get qualitatively better estimated distributions.
 
 ```{r fig.height=6, fig.width=8, warning=FALSE, message=FALSE}
-require(wssg)
+require(subgraphing)
 require(ggplot2)
 require(reshape2)
 library(MASS)
@@ -150,17 +161,17 @@ xdim <- 3
 ydim <- 2
 alpha <- array(runif(xdim*ydim, min=.5, max=5), dim=c(xdim, ydim))  # true alpha
 beta <- array(runif(xdim*ydim, min=.5, max=5), dim=c(xdim, ydim))  # true beta
+
 n_vec <- c(100, 5000)
 n_spaces <- length(n_vec)
 n_bin <- 15
 edge_err <- array(NaN, dim=c(xdim, ydim, n_spaces))  # the error per edge per iteration
-err <- array(NaN, dim=c(n_spaces))  # the average error per iteration
 hist_breaks <- seq(0, 1, length.out=n_bin)  # beta distr btwn 0 and 1
 
 for (k in 1:length(n_vec)) {
   edge_distr_plots <- list()
   n <- n_vec[k]
-  samp <- sample_beta_graph(alpha, beta, n)
+  samp <- sg.beta.sample_graph(alpha, beta, n)
   counter <- 1
   for (i in 1:xdim) {
     for (j in 1:ydim) {
@@ -186,54 +197,8 @@ for (k in 1:length(n_vec)) {
 
 ```
 
-### Simulation
 
-For this simulation, we will do as follows:
-
-+ Sample n observations from a 2x3 graph RV where each edge obeys the beta distribution with parameters alpha, beta.
-+ Histogram bin the values into 20 bins from 0 to 1.
-+ Show the average MSE (average over all of the edges) between the density estimation per edge and the true density function per edge approaches 0 as $n \rightarrow \infty$ as a function of n.
-
-We know that by convergence, if we sample a large number of values our sample density should approximate to the true density better and better, and this simulation checks that this property is satisfied.
-
-```{r fig.width=8}
-n_vec <- lseq(50, 5000, 20)
-n_spaces <- length(n_vec)
-edge_err <- array(NaN, dim=c(xdim, ydim, n_spaces))  # the error per edge per iteration
-err <- array(NaN, dim=c(n_spaces))  # the average error per iteration
-for (k in 1:length(n_vec)) {
-  n <- n_vec[k]
-  samp <- sample_beta_graph(alpha, beta, n)
-  for (i in 1:xdim) {
-    for (j in 1:ydim) {
-      hsamp <- hist(samp[i, j,], breaks=hist_breaks, plot=FALSE)
-      edge_err[i, j, k] <- mse(hsamp$density, dbeta(hsamp$mids, alpha[i, j], beta[i, j]))
-    }
-  }
-  err[k] <- mean(edge_err[,,k])
-}
-
-base_breaks <- function(n = 10){
-    function(x) {
-        axisTicks(log10(range(x, na.rm = TRUE)), log = TRUE, n = n)
-    }
-}
-
-results <- data.frame(n=n_vec, error=err)
-err_plot <- ggplot(results, aes(x=n, y=error)) +
-  geom_point(size=3) +
-  scale_x_log10(labels=trans_format("log10", math_format(10^.x)), breaks=trans_breaks("log10", function(x) 10^x, n=4)) +
-  xlab('Number of Samples') +
-  ylab('Average edge-wise MSE') +
-  ggtitle('Analalyzing convergence of Samples to Truths') +
-  theme(text=element_text(size=12))
-err_plot + annotation_logticks(base = 10)
-```
-
-As we can see above, our average MSE drops off exponentially as the number of samples increases. This suggests that our sampling code is functioning properly.
-
-
-## Estimation is Consistent
+## Estimation of Parameters is Consistent
 
 Here, we will verify that our estimator converges for arbitrary random alpha, beta as our number of samples increases, given that our sampling code is correct (see previous section and test code). We are using the method of moments estimators for alpha and beta, and while the method of moments estimators might not necessarily converge as rapidly to the true parameters as the maximum likelihood estimators, they are still consistent.
 
@@ -268,9 +233,9 @@ hist_breaks <- seq(0, 1, length.out=n_bin)  # beta distr btwn 0 and 1
 for (k in 1:length(n_vec)) {
   edge_distr_plots <- list()
   n <- n_vec[k]
-  samp <- sample_beta_graph(alpha, beta, n)
+  samp <- sg.beta.sample_graph(alpha, beta, n)
   counter <- 1
-  est <- beta_graph_estimator(samp)
+  est <- sg.beta.graph_estimator(samp)
   params <- list()
   params[[1]] <- plot_param(est$alpha, title=paste('Estimated Alpha, n=', n, sep=""))
   params[[2]] <- plot_param(est$beta, title=paste('Estimated Beta, n=', n, sep=""))
@@ -289,10 +254,62 @@ As we can see, after 1000 samples, our estimate is much closer to the true alpha
 For this simulation, we will do as follows:
 
 + Sample n observations from a 2x3 graph RV where each edge obeys the beta distribution with parameters alpha, beta.
-+ Plot frobenius norm of difference between estimated alpha and true alpha (likewise for beta) as a function of the number of samples n.
++ Histogram bin the values into 20 bins from 0 to 1.
++ Show the average MSE (average over all of the edges) between the density estimation per edge and the true density function per edge approaches 0 as $n \rightarrow \infty$ as a function of n.
++ Show frobenius norm of difference between estimated alpha and true alpha (likewise for beta) as a function of the number of samples n.
 
-Due to consistency, we expect that as n increases we should get closer and closer approximations of alpha, beta. and as such the difference (frobenius norm of the difference) between the estimated and true alpha, beta should decline. 
+We know that by convergence, if we sample a large number of values our sample density should approximate to the true density better and better, and this simulation checks that this property is satisfied. Due to consistency, we expect that as n increases we should get closer and closer approximations of alpha, beta. and as such the difference (frobenius norm of the difference) between the estimated and true alpha, beta should decline. 
 
 ```{r fig.width=8}
+n_vec <- lseq(50, 5000, 20)
+n_spaces <- length(n_vec)
+edge_err <- array(NaN, dim=c(xdim, ydim, n_spaces))  # the error per edge per iteration
+err <- array(NaN, dim=c(n_spaces))  # the average error per iteration
+diff <- list(alpha=array(NaN, dim=c(n_spaces)), beta=array(NaN, dim=c(n_spaces)))
 
+for (k in 1:length(n_vec)) {
+  n <- n_vec[k]
+  samp <- sg.beta.sample_graph(alpha, beta, n)
+  for (i in 1:xdim) {
+    for (j in 1:ydim) {
+      hsamp <- hist(samp[i, j,], breaks=hist_breaks, plot=FALSE)
+      edge_err[i, j, k] <- mse(hsamp$density, dbeta(hsamp$mids, alpha[i, j], beta[i, j]))
+    }
+  }
+  est <- sg.beta.graph_estimator(samp)
+  diff$alpha[k] <- norm(est$alpha - alpha, 'F')
+  diff$beta[k] <- norm(est$beta - beta, 'F')
+  err[k] <- mean(edge_err[,,k])
+}
+
+base_breaks <- function(n = 10){
+    function(x) {
+        axisTicks(log10(range(x, na.rm = TRUE)), log = TRUE, n = n)
+    }
+}
+
+er_results <- data.frame(n=n_vec, error=err)
+edge_err_plot <- ggplot(er_results, aes(x=n, y=error)) +
+  geom_line(size=3) +
+  scale_x_log10(labels=trans_format("log10", math_format(10^.x)), breaks=trans_breaks("log10", function(x) 10^x, n=4)) +
+  xlab('Number of Samples') +
+  ylab('Average edge-wise MSE') +
+  ggtitle('Analalyzing Convergence of distribution of Edge-wise Samples to Density Function') +
+  theme(text=element_text(size=12)) +
+  annotation_logticks(base=10)
+
+param_results <- data.frame(n=n_vec, alpha=diff$alpha, beta=diff$beta)
+param_results <- as.data.frame.array(melt(param_results, id="n", variable.name="parameter"))
+param_err_plot <- ggplot(param_results, aes(x=n, y=value, group=parameter, color=parameter)) +
+  geom_line(size=3) +
+  scale_x_log10(labels=trans_format("log10", math_format(10^.x)), breaks=trans_breaks("log10", function(x) 10^x, n=4)) +
+  xlab('Number of Samples') +
+  ylab('Norm of Difference') +
+  ggtitle('Analalyzing Consistency of Parameters to Truths') +
+  theme(text=element_text(size=12)) +
+  annotation_logticks(base = 10)
+
+multiplot(edge_err_plot, param_err_plot, cols = 1)
 ```
+
+As we can see above, our average MSE drops off exponentially as the number of samples increases. This suggests that our sampling is convergent to the true distribution of parameters. Moreover, looking at the bottom plot, we can see that as we increase our number of samples, of parameters are clearly converging to the true parameters. This indicates that our estimators are consistent.

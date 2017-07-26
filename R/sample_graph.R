@@ -55,10 +55,10 @@ sg.bern.sample_graph <- function(p, s=10, type="array") {
   m <- dims[2]
   samp <- array(runif(n=n*m*s), dim=c(n, m, s))
 
-  # use ifelse to define the behavior when x[i, j, ] > p[i, j] to set
-  # to connected, and disconnected otherwise
-  # apply over the third dimension (number of subjects)
-  samp <- array(apply(samp, 3, function(x) ifelse(x > p, 0, 1)), dim=c(n, m, s))
+  # if x[,,i] < p, edge gets a 1, 0 otherwise
+  # multiply by 1 to cast the logical array to numeric
+  # apply over the third dimension (number of subjects) and reshape
+  samp <- array(apply(samp, 3, function(x) 1*(x < p)), dim=c(n, m, s))
 
   if (type == "array") {
     return(samp)

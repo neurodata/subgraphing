@@ -1,9 +1,10 @@
 library(subgraphing)
 context("Bernoulli Graph Estimator Tests")
 
+n = 1000  # number of samples
+
 test_that("bernoulli estimation functions properly for basic inputs", {
   ps <- runif(1)
-  n = 500  # number of samples
   for (p in ps) {
     samp <- ifelse(runif(n) > p, 0, 1)
     predicted <- sg.bern.estimator(samp)
@@ -12,7 +13,6 @@ test_that("bernoulli estimation functions properly for basic inputs", {
 })
 
 test_that("bernoulli estimation properly smooths", {
-  n = 500
   samp <- array(0, dim=c(n))  # sample only has zeros so it should be smoothed
   params <- sg.bern.estimator(samp)
   np <- 1/(10*n)
@@ -25,7 +25,6 @@ test_that("bernoulli estimation properly smooths", {
 
 test_that("bernoulli estimation functions given inputs that need to be thresholded", {
   # inputs are uniform RVs with a threshold at .5 should have p of .5
-  n = 500
   samp <- runif(n)  # n uniform RVs from 0 to 1
   params <- sg.bern.estimator(samp, thresh = .5, smooth = FALSE)
   expect_equal(params$p, .5, tolerance=0.05)
@@ -47,7 +46,6 @@ test_that("bernoulli estimation functions given inputs that need to be threshold
 })
 
 test_that("bernoulli graph estimation and random sampling functions properly", {
-  n = 500
   xdim <- 2
   ydim <- 3
   p <- array(runif(6, min=0, max=1), dim=c(xdim, ydim))

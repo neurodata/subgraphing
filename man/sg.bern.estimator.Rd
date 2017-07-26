@@ -10,9 +10,11 @@ sg.bern.estimator(samp, thresh = 0, smooth = TRUE)
 \item{samp}{a univariate samp of values with arbitrary class labels.}
 
 \item{thresh=0:}{is the threshold below which we set edges to disconnected, and above which we set edges to connected.}
+
+\item{smooth=TRUE:}{whether to smooth p to avoid undesirable limits.}
 }
 \value{
-params$p the p parameter per edge. [n x m]
+p the p parameter per edge.
 }
 \description{
 \code{sg.bern.estimator} estimate the parameter of a bernoulli distribution, p, for a given samp.

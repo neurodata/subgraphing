@@ -4,8 +4,8 @@
 #' distribution, alpha and beta, for a given samp.
 #'
 #' @param samp a univariate samp of values with arbitrary class labels.
-#' @return params$alpha the alpha parameter per edge. [n x m]
-#' @return params$beta the beta parameter per edge. [n x m]
+#' @return alpha [n x m] the alpha parameter per edge.
+#' @return beta [n x m] the beta parameter per edge.
 #' @examples
 #' @export
 #' @seealso \code{\link{sg.beta.graph_estimator}}
@@ -27,7 +27,8 @@ sg.beta.estimator <- function(samp) {
 #'
 #' @param samp a univariate samp of values with arbitrary class labels.
 #' @param thresh=0: is the threshold below which we set edges to disconnected, and above which we set edges to connected.
-#' @return params$p the p parameter per edge. [n x m]
+#' @param smooth=TRUE: whether to smooth p to avoid undesirable limits.
+#' @return p the p parameter per edge.
 #' @examples
 #' @export
 #' @seealso \code{\link{sg.bern.graph_estimator}}
@@ -39,7 +40,7 @@ sg.bern.estimator <- function(samp, thresh=0, smooth=TRUE) {
   if (smooth) {  # smooth if we only have 1 category so that we don't have p=0 or p=1, which has poor asymptotic behavior
     np <- 1/(10*s)
     p <- ifelse(p == 0, np, p)
-    p <- ifelse(p == 1, 1-np, p)
+    p <- ifelse(p == 1, 1 - np, p)
   }
   return(list(p=p))
 }

@@ -13,11 +13,11 @@ sg.bern.graph_estimator(samp, thresh = 0, smooth = TRUE)
 - if samp is an array, then it should be of dimensions [n x m x s].}
 
 \item{thresh=0:}{is the threshold below which we set edges to disconnected, and above which we set edges to connected.}
+
+\item{smooth=TRUE:}{whether to smooth p to avoid undesirable limits.}
 }
 \value{
-params$alpha the alpha parameter per edge. [n x m]
-
-params$beta the beta parameter per edge. [n x m]
+p [n x m] the p parameter per edge representing the probability of an edge existing.
 }
 \description{
 \code{sg.bern.graph_estimator} uses the method of moments to estimate the parameters of a beta

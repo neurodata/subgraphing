@@ -1,6 +1,6 @@
 Package: subgraphing
 Title: Signal Subgraphs and Extensions
-Version: 0.0.0.1
+Version: 0.0.1
 Authors@R: person("Eric", "Bridgeford", email="ericwb95@gmail.com", role=c('aut', 'cre'))
 Description: This package develops a model for the identification of the most\n significant edges given connectomes of arbitrary class labels. We extend\n this model for for classification of connectomes.
 Depends: R (>= 3.2.3)

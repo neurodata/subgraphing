@@ -10,9 +10,9 @@ sg.beta.estimator(samp)
 \item{samp}{a univariate samp of values with arbitrary class labels.}
 }
 \value{
-params$alpha the alpha parameter per edge. [n x m]
+alpha [n x m] the alpha parameter per edge.
 
-params$beta the beta parameter per edge. [n x m]
+beta [n x m] the beta parameter per edge.
 }
 \description{
 \code{sg.beta.estimator} uses the method of moments to estimate the parameters of a beta
