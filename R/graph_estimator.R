@@ -9,7 +9,6 @@
 #'    - if samp is an array, then it should be of dimensions [n x m x s].
 #' @return params$alpha the alpha parameter per edge. [n x m]
 #' @return params$beta the beta parameter per edge. [n x m]
-#' @examples
 #' @export
 #' @seealso \code{\link{sg.beta.estimator}}
 #'
@@ -36,3 +35,38 @@ sg.beta.graph_estimator <- function(samp) {
   return(list(alpha=alpha, beta=beta))
 }
 
+#' A function to fit a bernoulli distribution to the edges of the matrices in a graph.
+#'
+#' \code{sg.bern.graph_estimator} uses the method of moments to estimate the parameters of a beta
+#' distribution, alpha and beta, for a collection of graphs.
+#'
+#' @param samp a list or array of graphs with arbitrary labelling.
+#'     - if samp is a list, then it should have s elements of dimensions
+#'         [n x m].
+#'    - if samp is an array, then it should be of dimensions [n x m x s].
+#' @param thresh=0: is the threshold below which we set edges to disconnected, and above which we set edges to connected.
+#' @return params$alpha the alpha parameter per edge. [n x m]
+#' @return params$beta the beta parameter per edge. [n x m]
+#' @examples
+#' @export
+#' @seealso \code{\link{sg.bern.estimator}}
+#'
+sg.bern.graph_estimator <- function(samp, thresh=0, smooth=TRUE) {
+  if(is.list(samp)) {
+    samp <- fmriu.list2array(samp)  # convert to a array for standardization
+  }
+
+  samp <- 1*samp
+  samp <- ifelse(samp > thresh, 1, 0)  # binarize to 1 if greater than thresh; 0 else
+
+  dims <- dim(samp)
+  s <- dims[3]
+  P <- apply(samp, c(1,2), sum)/s  # sum over third dimension and normalize by number of els for p per edge
+  # smooth if desired
+  if (smooth) {
+    np <- 1/(10*s)
+    P[P == 0] <- np
+    P[P == 1] <- (1 - np)
+  }
+  return(list(p=P))
+}
