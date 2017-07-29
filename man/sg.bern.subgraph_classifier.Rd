@@ -4,23 +4,23 @@
 \alias{sg.bern.subgraph_classifier}
 \title{Bernoulli Subgraph Classifier}
 \usage{
-sg.bern.subgraph_classifier(test, test_results, p, pi, e, coherent = FALSE)
+sg.bern.subgraph_classifier(test, stats, p, pi, e, classes, coherent = FALSE)
 }
 \arguments{
 \item{test}{the test array to generate labels for.
  - if test is a list, then it should have s elements of dimensions
-     [n x m].
-- if test is an array, then it should be of dimensions [n x m x s].}
+     [n x n].
+- if test is an array, then it should be of dimensions [n x n x s].}
 
-\item{p}{[n x m x c] the probability per edge of being connected per class for c classes.}
+\item{p}{[n x n x c] the probability per edge of being connected per class for c classes.}
 
 \item{pi}{[c] the pi vector probability of each class occuring.}
 
-\item{e}{the number of edges to look for, arbitrarily breaking ties as necessary.}
+\item{e}{[1] the number of edges in the subgraph.}
 
-\item{test_stats}{[n x m] the test-statistic results.}
+\item{classes}{the labels for the classes as ordered in the pi and p arrays.}
 
-\item{coherent=FALSE}{a logical indicating whether to approximate a coherent, or incoherent, subgraph.}
+\item{coherent=FALSE}{if FALSE, estimate an incoherent subgraph, otherwise an integer indicating the number of vertices in the coherent subgraph.}
 }
 \value{
 edges [e] the edges present in the subgraph.

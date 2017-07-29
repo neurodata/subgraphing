@@ -26,13 +26,13 @@ test_that("beta estimator throws error if sample has values less than 0.", {
   samp <- samp[sample(length(samp))]
   expect_that(sg.beta.estimator(samp), throws_error)
 })
-
+n = 100
+xdim <- 3
+ydim <- 3
+alpha <- array(runif(xdim*ydim, min=1, max=5), dim=c(xdim, ydim))
+beta <- array(runif(xdim*ydim, min=1, max=5), dim=c(xdim, ydim))
 test_that("beta graph estimation and random sampling functions properly", {
-  n = 100
-  xdim <- 2
-  ydim <- 3
-  alpha <- array(runif(6, min=1, max=5), dim=c(xdim, ydim))
-  beta <- array(runif(6, min=1, max=5), dim=c(xdim, ydim))
+
   samp <- sg.beta.sample_graph(alpha, beta, s=n)
   est <- sg.beta.graph_estimator(samp)
   expect_equal(est$alpha, alpha, tolerance=.5)
@@ -40,11 +40,7 @@ test_that("beta graph estimation and random sampling functions properly", {
 })
 
 test_that("random sampling function throws error when alpha and beta not of same shape", {
-  n = 100
-  xdim <- 2
-  ydim <- 3
-  alpha <- array(runif(6, min=1, max=5), dim=c(ydim, xdim))
-  beta <- array(runif(6, min=1, max=5), dim=c(xdim, ydim))
+  beta <- array(runif(16, min=1, max=5), dim=c(4, 4))
   expect_error(sg.beta.sample_graph(alpha, beta, s=n))
 })
 

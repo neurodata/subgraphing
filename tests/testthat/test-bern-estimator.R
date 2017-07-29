@@ -46,9 +46,9 @@ test_that("bernoulli estimation functions given inputs that need to be threshold
 })
 
 test_that("bernoulli graph estimation and random sampling functions properly", {
-  xdim <- 2
+  xdim <- 3
   ydim <- 3
-  p <- array(runif(6, min=0, max=1), dim=c(xdim, ydim))
+  p <- array(runif(xdim*ydim, min=0, max=1), dim=c(xdim, ydim))
   samp <- sg.bern.sample_graph(p, s=n)
   est <- sg.bern.graph_estimator(samp)
   expect_equal(est$p, p, tolerance=.05)

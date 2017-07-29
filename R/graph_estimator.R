@@ -5,10 +5,10 @@
 #'
 #' @param samp a list or array of graphs with arbitrary labelling.
 #'     - if samp is a list, then it should have s elements of dimensions
-#'         [n x m].
-#'    - if samp is an array, then it should be of dimensions [n x m x s].
-#' @return alpha [n x m] the alpha parameter per edge.
-#' @return beta [n x m] the beta parameter per edge.
+#'         [n x n].
+#'    - if samp is an array, then it should be of dimensions [n x n x s].
+#' @return alpha [n x n] the alpha parameter per edge.
+#' @return beta [n x n] the beta parameter per edge.
 #' @export
 #' @seealso \code{\link{sg.beta.estimator}}
 #'
@@ -20,6 +20,11 @@ sg.beta.graph_estimator <- function(samp) {
   n <- dims[1]
   m <- dims[2]
   s <- dims[3]
+
+  if (n != m) {
+    stop(sprintf("You have passed an invalid graph, as dim1 is %d and dim2 is %d, while dim1 should be == dim2.", n, m))
+  }
+
   alpha <- array(NaN, dim=c(n, m))
   beta <- array(NaN, dim=c(n, m))
   for (i in 1:n) {
@@ -42,11 +47,11 @@ sg.beta.graph_estimator <- function(samp) {
 #'
 #' @param samp a list or array of graphs with arbitrary labelling.
 #'     - if samp is a list, then it should have s elements of dimensions
-#'         [n x m].
-#'    - if samp is an array, then it should be of dimensions [n x m x s].
+#'         [n x n].
+#'    - if samp is an array, then it should be of dimensions [n x n x s].
 #' @param thresh=0: is the threshold below which we set edges to disconnected, and above which we set edges to connected.
 #' @param smooth=TRUE: whether to smooth p to avoid undesirable limits.
-#' @return p [n x m] the p parameter per edge representing the probability of an edge existing.
+#' @return p [n x n] the p parameter per edge representing the probability of an edge existing.
 #' @examples
 #' @export
 #' @seealso \code{\link{sg.bern.estimator}}
@@ -60,7 +65,14 @@ sg.bern.graph_estimator <- function(samp, thresh=0, smooth=TRUE) {
   samp <- ifelse(samp > thresh, 1, 0)  # binarize to 1 if greater than thresh; 0 else
 
   dims <- dim(samp)
+  n <- dims[1]
+  m <- dims[2]
   s <- dims[3]
+
+  if (n != m) {
+    stop(sprintf("You have passed an invalid graph, as dim1 is %d and dim2 is %d, while dim1 should be == dim2.", n, m))
+  }
+
   P <- apply(samp, c(1,2), sum)/s  # sum over third dimension and normalize by number of els for p per edge
   # smooth if desired
   if (smooth) {

@@ -4,33 +4,25 @@
 #'
 #' @param test the test array to generate labels for.
 #'     - if test is a list, then it should have s elements of dimensions
-#'         [n x m].
-#'    - if test is an array, then it should be of dimensions [n x m x s].
-#' @param test_stats [n x m] the test-statistic results.
-#' @param p [n x m x c] the probability per edge of being connected per class for c classes.
+#'         [n x n].
+#'    - if test is an array, then it should be of dimensions [n x n x s].
+#' @param p [n x n x c] the probability per edge of being connected per class for c classes.
 #' @param pi [c] the pi vector probability of each class occuring.
-#' @param e the number of edges to look for, arbitrarily breaking ties as necessary.
-#' @param coherent=FALSE a logical indicating whether to approximate a coherent, or incoherent, subgraph.
+#' @param e [1] the number of edges in the subgraph.
+#' @param classes the labels for the classes as ordered in the pi and p arrays.
+#' @param coherent=FALSE if FALSE, estimate an incoherent subgraph, otherwise an integer indicating the number of vertices in the coherent subgraph.
 #' @return edges [e] the edges present in the subgraph.
 #' @return Yhat [s] the predicted class for each test example.
 #' @export
 #' @seealso \code{\link{sg.bern.compute_graph_statistics}}
 #'
-sg.bern.subgraph_classifier <- function(test, test_results, p, pi, e, coherent=FALSE) {
-
-  if(is.list(test)) {
-    test <- fmriu.list2array(test)  # convert to a array for standardization
-  }
-
-  if (identical(coherent, FALSE)) {
-    # incoherent estimator
-    edges <- sort(test_results, index.return=TRUE)$ix[1:e]  # sort test statistics in ascending order; take the first e of them
-  } else {
-    stop("Coherent estimator not implemented yet.")
-  }
+sg.bern.subgraph_classifier <- function(test, stats, p, pi, e, classes, coherent=FALSE) {
 
   s <- dim(test)[3]
   c <- dim(p)[3]
+
+  # estimate the ordering of edges depending on the test statistic results
+  edges <- sg.bern.subgraph_edge_estimation(stats, e, coherent=coherent)
 
   hyp <- array(NaN, dim=c(s, e, c))
   for (k in 1:c) {
@@ -48,6 +40,9 @@ sg.bern.subgraph_classifier <- function(test, test_results, p, pi, e, coherent=F
   Yhat <- apply(h, c(1), FUN = function(x) {
     sort(x, decreasing=TRUE, index.return=TRUE)$ix[1]
   })
+
+  # return class label whwere Yhat indicates the position of the respective label
+  Yhat <- sapply(Yhat, function(x) classes[x], simplify=TRUE)
 
   return(list(edges=edges, Yhat=Yhat))
 }

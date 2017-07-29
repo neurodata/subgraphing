@@ -2,34 +2,36 @@
 % Please edit documentation in R/xval_subgraph_classifier.R
 \name{sg.bern.xval_classifier}
 \alias{sg.bern.xval_classifier}
-\title{Bernoulli Subgraph Classifier}
+\title{Cross-Validated Bernoulli Subgraph Classifier}
 \usage{
-sg.bern.xval_classifier(samp, Y, test_stats, p, pi, es, coherent = FALSE,
-  tstat = "fisher")
+sg.bern.xval_classifier(samp, Y, es, coherent = FALSE, tstat = "fisher",
+  xval = "loo", folds = NaN)
 }
 \arguments{
 \item{samp}{a list or array of graphs with arbitrary labelling.
  - if samp is a list, then it should have s elements of dimensions
-     [n x m].
-- if samp is an array, then it should be of dimensions [n x m x s].}
+     [n x n].
+- if samp is an array, then it should be of dimensions [n x n x s].}
 
 \item{Y}{[s] the class labels.}
 
-\item{p}{[n x m x c] the probability per edge of being connected per class for c classes.}
+\item{es}{[z] an array where each element is the number of edges to look for, arbitrarily breaking ties as necessary.}
 
-\item{es}{[z] the number of edges to look for, arbitrarily breaking ties as necessary.}
-
-\item{coherent=FALSE}{a logical indicating whether to approximate a coherent, or incoherent, subgraph.}
+\item{coherent=FALSE}{if FALSE, estimate an incoherent subgraph, otherwise an integer indicating the number of vertices in the coherent subgraph.}
 
 \item{tstat="fisher"}{the test statistic to use. options are fisher's exact ("fisher") and chi-squared ("chisq").}
+
+\item{xval="loo"}{the cross-validation options to use. Options are "loo" (leave-one-out) and "kfold" (K-fold).}
+
+\item{folds=NaN}{the number of folds to do if xval is set to kfold.}
 }
 \value{
-subgraph [n x m] an array indicating whether an edge is present or not present in the subgraph.
+subgraph [n x n] an array indicating whether an edge is present or not present in the subgraph.
 
-p [n x m x c] the probability per edge of being connected per class for c classes.
+p [n x n x c] the probability per edge of being connected per class for c classes.
 }
 \description{
-\code{sg.bern.compute_graph_statistics} estimates the graph statistics necessary to compute a subgraph.
+\code{sg.bern.xval_classifier} Bernoulli Subgraph Classifier with Cross Validation to determine the optimal subgraph.
 }
 \seealso{
 \code{\link{sg.bern.compute_graph_statistics}}

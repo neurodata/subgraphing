@@ -2,9 +2,9 @@
 #'
 #' \code{sg.beta.subgraph_estimator} A function to produce estimators for bernoulli graphs needed to compute subgraphs.
 #'
-#' @param samp  [n x m x s] an array of graph samples. Should be binary (0 or 1).
+#' @param samp  [n x n x s] an array of graph samples. Should be binary (0 or 1).
 #' @param Y [s] the class labels.
-#' @return cont_matrix [n, m, c, 2] a contingency table for each edge, where each contingency
+#' @return cont_matrix [n, n, c, 2] a contingency table for each edge, where each contingency
 #'         table has either connected or unconnected for each class.
 #' @export
 #' @seealso \code{\link{sg.bern.graph_estimator}}
@@ -15,6 +15,10 @@ sg.bern.subgraph_estimator <- function(samp, Y) {
   m <- dims[2]
   s <- dims[3]
 
+  if (n != m) {
+    stop(sprintf("You have passed an invalid graph, as dim1 is %d and dim2 is %d, while dim1 should be == dim2.", n, m))
+  }
+
   if (s != length(Y)) {
     stop(sprintf(paste('The number of samples, ', s, "is not equal to\n",
                        " the number of class labels, ", length(Y), '.', sep="")))
@@ -23,8 +27,8 @@ sg.bern.subgraph_estimator <- function(samp, Y) {
   classes <- unique(Y)  # classes are our unique class labels
   C <- length(classes)
 
-  cont_matrix <- array(NaN, dim=c(n, m, C, 2))
-  p = array(NaN, dim=c(n, m, C))
+  cont_matrix <- array(NaN, dim=c(n, n, C, 2))
+  p = array(NaN, dim=c(n, n, C))
   pi = array(NaN, dim=c(C))
 
   # make the contingency matrix
@@ -42,5 +46,5 @@ sg.bern.subgraph_estimator <- function(samp, Y) {
     pi[k] <- sum(1*idx_class)/s
   }
 
-  return(list(cont_matrix=cont_matrix, p=p, pi=pi))
+  return(list(cont_matrix=cont_matrix, p=p, pi=pi, classes=classes))
 }

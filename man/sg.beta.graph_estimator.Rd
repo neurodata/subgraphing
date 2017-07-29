@@ -9,13 +9,13 @@ sg.beta.graph_estimator(samp)
 \arguments{
 \item{samp}{a list or array of graphs with arbitrary labelling.
  - if samp is a list, then it should have s elements of dimensions
-     [n x m].
-- if samp is an array, then it should be of dimensions [n x m x s].}
+     [n x n].
+- if samp is an array, then it should be of dimensions [n x n x s].}
 }
 \value{
-alpha [n x m] the alpha parameter per edge.
+alpha [n x n] the alpha parameter per edge.
 
-beta [n x m] the beta parameter per edge.
+beta [n x n] the beta parameter per edge.
 }
 \description{
 \code{sg.beta.graph_estimator} uses the method of moments to estimate the parameters of a beta

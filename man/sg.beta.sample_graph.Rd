@@ -7,9 +7,9 @@
 sg.beta.sample_graph(alpha, beta, s = 10, type = "array")
 }
 \arguments{
-\item{alpha}{a [n x m] matrix indicating the alphas of each edge.}
+\item{alpha}{a [n x n] matrix indicating the alphas of each edge.}
 
-\item{beta}{a [n x m] matrix indicating the betas of each edge.}
+\item{beta}{a [n x n] matrix indicating the betas of each edge.}
 
 \item{s}{the number of graphs to sample.}
 
@@ -17,8 +17,8 @@ sg.beta.sample_graph(alpha, beta, s = 10, type = "array")
 }
 \value{
 sample the graph observations from the given beta distribution.
-    - if type == "list", returns a p element list of [n x m] observations.
-    - if type == "array" (default), returns a [n x m x s] element array where the 3rd dimension indexes the observations.
+    - if type == "list", returns a p element list of [n x n] observations.
+    - if type == "array" (default), returns a [n x n x s] element array where the 3rd dimension indexes the observations.
 }
 \description{
 \code{sg.beta.sample_graph} A function to sample from a graph-valued RV where each edge follows a beta distribution.

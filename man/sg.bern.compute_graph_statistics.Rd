@@ -10,8 +10,8 @@ sg.bern.compute_graph_statistics(samp, Y, e, coherent = FALSE,
 \arguments{
 \item{samp}{a list or array of graphs with arbitrary labelling.
  - if samp is a list, then it should have s elements of dimensions
-     [n x m].
-- if samp is an array, then it should be of dimensions [n x m x s].}
+     [n x n].
+- if samp is an array, then it should be of dimensions [n x n x s].}
 
 \item{Y}{[s] the class labels.}
 
@@ -22,9 +22,9 @@ sg.bern.compute_graph_statistics(samp, Y, e, coherent = FALSE,
 \item{tstat="fisher"}{the test statistic to use. options are fisher's exact ("fisher") and chi-squared ("chisq").}
 }
 \value{
-subgraph [n x m] an array indicating whether an edge is present or not present in the subgraph.
+subgraph [n x n] an array indicating whether an edge is present or not present in the subgraph.
 
-p [n x m x c] the probability per edge of being connected per class for c classes.
+p [n x n x c] the probability per edge of being connected per class for c classes.
 }
 \description{
 \code{sg.bern.compute_subgraph} estimates the edges for a subgraph in a given set of samples.

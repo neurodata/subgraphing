@@ -7,13 +7,13 @@
 sg.bern.edge_test(cont_matrix, test_stat = "fisher")
 }
 \arguments{
-\item{cont_matrix}{[n, m, c, 2] a contingency table for each edge, where each contingency
+\item{cont_matrix}{[n x n x c x 2] a contingency table for each edge, where each contingency
 table has either connected or unconnected for each class.}
 
 \item{test}{the test statistic function object to use. Options are "fisher" or "chisq".}
 }
 \value{
-test_stat [n x m] the test statistic per edge.
+test_stat [n x n] the test statistic per edge.
 }
 \description{
 \code{sg.bern.edge_test} A function to compute the test statistic per edge from a contingency matrix.

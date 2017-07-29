@@ -7,7 +7,7 @@
 sg.bern.sample_graph(p, s = 10, type = "array")
 }
 \arguments{
-\item{p}{a [n x m] matrix indicating the alphas of each edge.}
+\item{p}{a [n x n] matrix indicating the alphas of each edge.}
 
 \item{type}{an option of "list" or "array" (default) for the format of the output.}
 
