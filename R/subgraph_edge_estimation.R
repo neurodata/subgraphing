@@ -10,6 +10,7 @@
 #' @seealso \code{\link{sg.bern.compute_graph_statistics}}
 #'
 sg.bern.subgraph_edge_estimation <- function(test_results, e, coherent=FALSE) {
+
   dims <- dim(test_results)
   n <- dims[1]
   m <- dims[2]
@@ -32,13 +33,18 @@ sg.bern.subgraph_edge_estimation <- function(test_results, e, coherent=FALSE) {
     for (sig in unique_sig) {
       vless <- 1*(test_results <= sig)  # 1s where lower than significance
       # score per vertex is the number of edges per vertex less than the threshold
-      # note that for directed graphs, we consider the in-degree + out-degree here
-      vertex_sig <- apply(vless, 1, sum) + apply(vless, 2, sum)
+      vertex_sig <- apply(vless, 1, sum)
       # see if we have (coherent #) vertices whose scores sum to greater than or equal the goal subgraph size
       vsig_ids_topc <- sort(vertex_sig, decreasing=TRUE, index.return=TRUE)$ix[1:coherent]
       if (sum(vertex_sig[vsig_ids_topc]) >= e) {
-        # take the lowest e significance scores from the edges incident the vsig_ids_topc vertices
-
+        # define a subgraph on the vertices with the most edges by setting the rest of the matrix to 1
+        vertex_subgraph <- array(1, dim=c(n, n))
+        # significance scores are btwn 0 and 1 and smaller is what we want, so fill in our subgraph with
+        # the true values which will be lower than 1 assuming any entries have a chance to reject the null
+        vertex_subgraph[vsig_ids_topc,] <- test_results[vsig_ids_topc,]
+        # find the top edges from the vertex subgraph as the ones with lowest e significances
+        edges <- sort(vertex_subgraph, index.return=TRUE)$ix[1:e]
+        break
       }
     }
   } else {

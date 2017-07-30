@@ -17,7 +17,7 @@ vignette: >
 knitr::opts_chunk$set(echo = TRUE, cache=TRUE)
 ```
 
-In this tutorial, we discuss our estimator of a beta distribution per edge for a given graph.
+In this tutorial, we discuss our estimator of a bernoulli distribution per edge for a given graph.
 
 # Framework
 
@@ -170,7 +170,7 @@ plot_param <- function(mtx, title='Parameter', lims=c(0, 1)) {
   return(plt)
 }
 xdim <- 3
-ydim <- 2
+ydim <- 3
 p <- array(runif(xdim*ydim, min=0, max=1), dim=c(xdim, ydim))  # true p
 n_vec <- c(50, 1000)
 n_spaces <- length(n_vec)
@@ -198,7 +198,7 @@ As we can see, after 1000 samples, our estimate is much closer to the true alpha
 
 For this simulation, we will do as follows:
 
-+ Sample n observations from a 2x3 graph RV where each edge obeys the beta distribution with parameters alpha, beta.
++ Sample n observations from a 3x3 graph RV where each edge obeys the beta distribution with parameters alpha, beta.
 + Histogram bin the values into 20 bins from 0 to 1.
 + Show the average MSE (average over all of the edges) between the density estimation per edge and the true density function per edge approaches 0 as $n \rightarrow \infty$ as a function of n.
 + Show frobenius norm of difference between estimated alpha and true alpha (likewise for beta) as a function of the number of samples n.
