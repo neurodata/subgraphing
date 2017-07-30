@@ -108,14 +108,151 @@ where $a_{uv}$ is the $(u, v)$ edge of graph $G$, and $h_*(\cdot; \mathcal{T})$ 
 
 # Evaluation
 
+## Cross-validated Error
+
 We will evaluate our model performance with the cross-validated error:
 
 \begin{align}
   \hat{L}_{\hat{h}(\cdot, \mathcal{T}_n)} &= \frac{1}{C} \sum_{i=1}^C \frac{1}{\left| \mathcal{T}_n \setminus \mathcal{T}_C \right|} \sum_{G \notin \mathcal{T}_C} \mathbb{I}\left\{\hat{h} \left(G; \mathcal{T}_C \right)\right\}
 \end{align}
 
-where $\mathcal{T}_C$ is the set of graphs that we train our model on.
+where $\mathcal{T}_C$ is the set of graphs that we trained our model on.
 
 Additionally, we can estimate a $p$ value using Monte Carlo permutations. We perform this by randomly permuting our labels $n$ times, and then using the permuted labels to construct our estimators and our bayes-plugin classifier. We then feed in our testing data and similarly compute a loss for each of our $n$ permutations. We report our $p$ value as the fraction of Monte Carlo permutations that perform better than our classifier given the correctly labelled data.
 
+## Misclassification Rate
 
+During our simulations, since we are constructing simulated data, we will know ahead of time whether an edge is or is not part of the subgraph. To quantify this performance, we consider the edge-misclassification rate:
+
+\begin{align}
+  R_n^x &= \frac{1}{|\mathcal{S}|} \sum_{(u, v) \in \mathcal{S}}\mathbb{I}\left\{(u, v) \notin \mathcal{\hat{S}}\right\}
+\end{align}
+
+or the fraction of edges that are part of the true subgraph $\mathcal{S}$ but not the estimated subgraph $\mathcal{\hat{S}}$.
+
+# Simulations
+
+## Easy Simulation
+
+In our basic simulation, we will use 2 classes with 3x3 probability matrices. The probability matrix for each class will be identical, except for 4 randomly selected edges, in which the probability for class 1 will be .25, and the probability for class 2 will be .75. 
+
+```{r, fig.width=12, fig.height=4}
+require(subgraphing)
+require(ggplot2)
+require(reshape2)
+require(fmriutils)
+require(Rmisc)
+
+lseq <- function(from, to, n) {
+  return(round(exp(seq(log(from), log(to), length.out = n))))
+}
+
+n = 4
+
+p <- array(runif(n^2), dim=c(n, n))  # p is initially random
+edges <- sample(1:n^2, n, replace = FALSE)  # select 4 random edges
+p1 <- p; p2 <- p  # initialize p1 and p2 to the same array
+
+for (edge in edges) {
+  p1[edge] <- .25
+  p2[edge] <- .75
+}
+
+p <- array(NaN, dim=c(n, n, 2))
+p[,,1] <- p1
+p[,,2] <- p2
+
+# visualize the two probability matrices
+plot_p1 <- fmriu.plot.plot_square(p[,,1], title="True P, class 1", xlabel="vertex", ylabel="vertex", legend="p")
+plot_p2 <- fmriu.plot.plot_square(p[,,2], title="True P, class 2", xlabel="vertex", ylabel="vertex", legend="p")
+sg <- array(0, dim=c(n, n))
+sg[edges] <- 1
+plot_sg <- fmriu.plot.plot_square(sg, title="Subgraph", xlabel="vertex", ylabel="vertex", legend="edge")
+multiplot(plot_p1, plot_p2, plot_sg, cols = 3)
+```
+
+As we can see,  it is quite immediately clear which edges are part of the subgraph, so our classifier should have no issues. We generate 10 simulated examples per class, and examine the results of of our estimators:
+
+```{r, fig.width=12, fig.height=4}
+ns = 100
+
+samp <- array(NaN, dim=c(n, n, ns*2))
+samp[,,1:ns] <- sg.bern.sample_graph(p[,,1], s=ns)
+samp[,,(ns+1):(2*ns)] <- sg.bern.sample_graph(p[,,2], s=ns)
+
+Y <-array(NaN, dim=c(ns*2))
+Y[1:ns] <- 0
+Y[(ns+1):(2*ns)] <- 1
+
+# approximate estimators and contingency table
+train <- sg.bern.subgraph_train(samp, Y, 4, coherent=FALSE, tstat = "fisher")
+
+# visualize the two probability matrices
+plot_p1 <- fmriu.plot.plot_square(train$p[,,1], title="Est P, class 1", xlabel="vertex", ylabel="vertex", legend="p")
+plot_p2 <- fmriu.plot.plot_square(train$p[,,2], title="Est P, class 2", xlabel="vertex", ylabel="vertex", legend="p")
+estsg <- array(0, dim=c(n, n))
+estsg[train$edges] <- 1
+plot_sg <- fmriu.plot.plot_square(estsg, title="Subgraph", xlabel="vertex", ylabel="vertex", legend="edge")
+multiplot(plot_p1, plot_p2, plot_sg, cols = 3)
+
+
+test <- array(NaN, dim=c(n, n, ns*2))
+test[,,1:ns] <- sg.bern.sample_graph(p[,,1], s=ns)
+test[,,(ns+1):(2*ns)] <- sg.bern.sample_graph(p[,,2], s=ns)
+test_y <- array(0, dim=c(2*ns))
+test_y[(ns+1):2*ns] <- 1
+
+classifier_res <- sg.bern.subgraph_classifier(test, train$edges, train$p, train$pi, train$classes)
+```
+Given 100 examples per class, we can see that our estimated Ps are very close to our true Ps (we investigate this more thoroughly in the vignette `bern_graph_estimator`), and our subgraph matches the truth perfectly.
+
+## Harder Simulation
+
+In this simulation, we will structure our trials very similarly to the previous, however our predictions will not be quite as simple this time. Our true P between class 1 and class 2 will no longer be identical for non-signal edges, as we will add gaussian noise with a cutoff at 0 and 1 (since probabilities cannot exceed 1 nor be lower than 0). We will report cross-validated error and misclassification rate as a function of the number of training examples used, and will also investigate the impact of having an estimate of 2, 4, and 8 signal edges.
+
+```{r, fig.height=4, fig.width=12}
+ns <- lseq(20, 600, 8)
+nes <- c(2, 4, 6, 8, 10)
+
+dim <- 4
+
+p <- array(runif(dim^2), dim=c(dim, dim))  # p is initially random
+edges <- sample(1:dim^2, 6, replace = FALSE)  # select 6 random edges
+p1 <- p + rnorm(dim^2, mean=0, sd=.1); p2 <- p + rnorm(dim^2, mean=0, sd=.1)  # initialize p1 and p2 to the same array with some noise
+
+p1[p1 > 1] <- 1; p1[p1 < 0] <- 0; p2[p2 > 1] <- 1; p2[p2 < 0] <- 0
+
+for (edge in edges) {
+  p1[edge] <- .3
+  p2[edge] <- .7
+}
+
+p <- array(NaN, dim=c(dim, dim, 2))
+p[,,1] <- p1
+p[,,2] <- p2
+
+# visualize the two probability matrices
+plot_p1 <- fmriu.plot.plot_square(p[,,1], title="True P, class 1", xlabel="vertex", ylabel="vertex", legend="p")
+plot_p2 <- fmriu.plot.plot_square(p[,,2], title="True P, class 2", xlabel="vertex", ylabel="vertex", legend="p")
+sg <- array(0, dim=c(dim, dim))
+sg[edges] <- 1
+plot_sg <- fmriu.plot.plot_square(sg, title="Subgraph", xlabel="vertex", ylabel="vertex", legend="edge")
+multiplot(plot_p1, plot_p2, plot_sg, cols = 3)
+```
+
+Again, our task appears to be fairly simple, but it should prove far more difficult than our previous task due to the fact that there now exists a class-conditional difference in the non-signal edges as well, although slight. 
+
+```{r}
+
+results <- data.frame(n=c(), error=c(), mis_edge=c())
+for (n in ns) {
+  samp <- array(NaN, dim=c(dim, dim, n*2))
+  samp[,,1:n] <- sg.bern.sample_graph(p[,,1], s=n)
+  samp[,,(n+1):(2*n)] <- sg.bern.sample_graph(p[,,2], s=n)
+  
+  Y <-array(NaN, dim=c(n*2))
+  Y[1:n] <- 0
+  Y[(n+1):(2*n)] <- 1
+  sg.bern.xval_classifier(samp=samp, Y=Y, nedges=nes, tstat="fisher", coherent = FALSE, xval="loo")
+}
+```

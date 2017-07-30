@@ -12,12 +12,12 @@
 #' @export
 #'
 sg.xval_split_data <- function(samp, Y, holdout) {
-  test_set <- samp[,,holdout]
+  test_set <- samp[,,holdout, drop=FALSE]
   test_y <- Y[holdout]
 
   all_ex <- 1:dim(samp)[3]  # a sequence of all the samples
   train_exs <- setdiff(all_ex, holdout)
-  train_set <- samp[,,train_exs]
+  train_set <- samp[,,train_exs, drop=FALSE]
   train_y <- Y[train_exs]
 
   return(list(train_set=train_set, train_y=train_y,
