@@ -51,11 +51,10 @@ sg.bern.xval_classifier <- function(samp, Y, es, coherent=FALSE, tstat="fisher",
       test_y <- splits$test_y
 
       # estimators for graph
-      sg_ests <- sg.bern.subgraph_train(samp = train_set, Y = train_y, tstat="fisher")
+      sg_ests <- sg.bern.subgraph_train(samp = train_set, Y = train_y, 6, coherent=coherent, tstat="fisher")
       for (e in es) {
         # classify the training data and produce accuracy summary
-        train_pred <- sg.bern.subgraph_classifier(train_set, sg_ests$p, sg_ests$pi, sg_ests$stats,
-                                                  sg_ests$classes, coherent = coherent)
+        train_pred <- sg.bern.subgraph_classifier(train_set, sg_ests$edges, sg_ests$p, sg_ests$pi, sg_ests$classes)
         tr_ac <- sg.prediction_accuracy(train_y, train_pred)
         train_acc <- c(train_acc, tr_ac)
 

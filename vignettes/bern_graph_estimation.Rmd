@@ -1,10 +1,10 @@
 ---
-title: "Beta Distributed Graph Estimation"
+title: "Bernoulli Distributed Graph Estimation"
 author: "Eric Bridgeford"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Beta Graph Estimation}
+  %\VignetteIndexEntry{Bernoulli Graph Estimation}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
   header-includes:

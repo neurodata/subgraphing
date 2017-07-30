@@ -1,0 +1,121 @@
+---
+title: "Bernoulli Incoherent Subgraph Estimation"
+author: "Eric Bridgeford"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Bernoulli Incoherent Subgraph Classifier}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  header-includes:
+   - \usepackage{amsfonts}
+   - \usepackage{amsmath}
+   - \usepackage[linesnumbered,lined,boxed,commentsnumbered]{algorithm2e}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache=TRUE)
+```
+
+In this tutorial, we discuss our estimator of a bernoulli distribution per edge for a given graph, and the strategies to identify an incoherent subgraph from the data. Using our estimators, we develop a Bayes Plugin Classifier. 
+
+# Framework
+
+## Setting
+
++ $\mathbb{G}: \Omega \rightarrow \mathcal{G}$ is a graph-valued RV with samples $G_i \sim \mathbb{G}$
++ For each $G_i \in \mathcal{G}$, we have $G_i = (V, E_i)$; that is, each $G_i$ is defined by a set of vertices $V$ and a set of edges $E_i$, where $w_i: V \times V \rightarrow \{0, 1\}$, and $w_i(e_{uv}) \in \{0, 1\}$. That is, each graph has binary edges.
++ $\mathbb{A}: \Omega \rightarrow \mathcal{A}$, a adjacency-matrix-valued RV with samples $A_i \sim \mathbb{A}$, where $\mathcal{A}$ is the space of possible adjacency-matrices and $A_i \in \mathcal{A}$.
++ $A_i \in \mathcal{A}$, and $\mathcal{A} \subseteq \mathbb{R}^{V \times V}$. 
++ Each graph $G_i$ can be represented as an adjacency-matrix $A_i$.
++ Within each graph, there exists some collection of edges $\mathcal{S}$ called the subgraph that contain the bulk of the class differences.
+
+## Statistical Goal
+
+Identify the sufficient parameters to characterize the distribution of connected and disconnected edges. Identify the edges that are most likely to show a class-conditional difference, the subgraph. Use the subgraph and the related estimators to produce a bayes-plugin classifier that allows us to accurately predict the class of items.
+
+## Model
+
+Assume that the edge weights can be characterized by a bernoulli RV; that is:
+
+\begin{align}
+  \mathbb{A}_{uv} \sim Bern(p_{uv})
+\end{align}
+
+where $p_{uv|y}$ is the probability of edge $e_{uv}$ being connected in class $y$.
+
+Then our likelihood function is simply:
+
+\begin{align}
+  L_{\mathbb{A}, Y}(A_i, y; \theta) &= \prod_{(u, v) \in \mathcal{S}} Bern(w_i(e_{uv}); p_{uv | y}) \\
+  &= \prod_{(u, v) \in \mathcal{S}} p_{uv | y}^{w_i(e_{uv})}(1 - p_{uv | y})^{1 - w_i(e_{uv})}
+\end{align}
+
+where $\mathcal{S}$ is our subgraph.
+
+# Estimators
+
+## Bernoulli Parameters
+
+Using MLE, it is easy to see that:
+
+\begin{align}
+  \hat{p}_{uv | y} = \frac{1}{n} \sum_{i | y_i = y} w_i(e_{uv})
+\end{align}
+
+where $w_i(e_{uv}) \in \{0, 1\}$ is the binary edge weight of edge $e_{uv}$. 
+
+Note that if $w_i(e_{uv}) = 0 \;\forall i$, then $p_{uv} = 0$, which is undesirable since we only have a finite sample (and successive samples where $w_i(e_{uv})) \neq 0$ would lead to poor model performance), and vice versa for $p_{uv} = 1$ when $w_i(e_{uv}) = 0 \;\forall i$. Then consider the smoothed estimator:
+
+\begin{align}
+  \hat{p}_{uv | y} = \begin{cases}
+    n_n & max_{i | y_i = y}(w_i(e_{uv})) = 0 \\
+    1-n_n & max_{i | y_i = y}(w_i(e_{uv})) = 1 \\
+    \hat{p}_{uv | y} & else
+  \end{cases}
+\end{align}
+
+## Priors
+
+Here, we take the maximum likelihood estimators for the prior probabilities, which assuming our data is sampled iid from our population, should suffice:
+
+\begin{align}
+  \hat{\pi}_y = \frac{n_y}{n}
+\end{align}
+
+where $n_y = \sum_{i =1}^n \mathbb{I}\{y_i = y\}$.
+
+## Incoherent Subgraph
+
+To estimate the incoherent subgraph, we  consider the following algorithm:
+
+incoherent_subgraph(G, e):
+
+  + assemble a contingency matrix, per edge, counting the number of occurences of a graph from each class having or not having a connection.
+  + compute the p-value of Fisher's exact test on the contingency matrix for each edge to produce the test statistic $T_{uv}$. The $p$ value signifies the probability of the null hypothesis, that there is no class-conditional difference present for edge $uv$, versus the alternative that there is a class-conditional difference present for edge $uv$.
+  + order the test statistics in increasing order, such that $T^{(1)}_{uv} \leq T^{(2)}_{u'v'} \leq ...$ for all the edges.
+  + choose the first $e$ edges as estimator of the signal-subgraph $\hat{\mathcal{S}}$.
+  
+## Classification
+
+We can use our Bernoulli probabilities to explicitly define a Bayes-Plugin classifier:
+
+\begin{align}
+  h_*(G; \mathcal{T}) = \textrm{argmax}_{y \in Y} \prod_{(u, v) \in \hat{\mathcal{S}}} \hat{p}_{uv | y}^{a_{uv}}(1 - \hat{p}_{uv | y})^{1 - a_{uv}}\hat{\pi}_y
+\end{align}
+
+where $a_{uv}$ is the $(u, v)$ edge of graph $G$, and $h_*(\cdot; \mathcal{T})$ is the hypothesis of the model constructed given training set $\mathcal{T}$. 
+
+# Evaluation
+
+We will evaluate our model performance with the cross-validated error:
+
+\begin{align}
+  \hat{L}_{\hat{h}(\cdot, \mathcal{T}_n)} &= \frac{1}{C} \sum_{i=1}^C \frac{1}{\left| \mathcal{T}_n \setminus \mathcal{T}_C \right|} \sum_{G \notin \mathcal{T}_C} \mathbb{I}\left\{\hat{h} \left(G; \mathcal{T}_C \right)\right\}
+\end{align}
+
+where $\mathcal{T}_C$ is the set of graphs that we train our model on.
+
+Additionally, we can estimate a $p$ value using Monte Carlo permutations. We perform this by randomly permuting our labels $n$ times, and then using the permuted labels to construct our estimators and our bayes-plugin classifier. We then feed in our testing data and similarly compute a loss for each of our $n$ permutations. We report our $p$ value as the fraction of Monte Carlo permutations that perform better than our classifier given the correctly labelled data.
+
+

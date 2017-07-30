@@ -37,7 +37,7 @@ Y[1:n] <- 0
 Y[(n+1):(2*n)] <- 1
 
 # approximate estimators and contingency table
-results <- sg.bern.subgraph_train(samp, Y, tstat = "fisher")
+results <- sg.bern.subgraph_train(samp, Y, 5, coherent=FALSE, tstat = "fisher")
 
 test_that("bernoulli subgraph estimator approximates valid probabilities", {
   expect_equal(norm(results$p[,,1] - p[,,1], 'F'), 0, tolerance=0.1)
@@ -50,18 +50,17 @@ test_that("bernoulli subgraph estimator approximates valid pi values", {
   expect_equal(results$pi[1], results$pi[2], .5, tolerance=.001)
 })
 
+test_that("bernoulli incoherent subgraph estimator approximates the correct set of edges", {
+  expect_true(all(c(1, 6, 11, 16, 21) %in% results$edges[1:5]))
+})
+
 test <- array(NaN, dim=c(xdim, ydim, n*2))
 test[,,1:n] <- sg.bern.sample_graph(p[,,1], s=n)
 test[,,(n+1):(2*n)] <- sg.bern.sample_graph(p[,,2], s=n)
 
-classifier_res <- sg.bern.subgraph_classifier(test, results$stats, results$p, results$pi, 5,
-                                              results$classes, coherent = FALSE)
+classifier_res <- sg.bern.subgraph_classifier(test, results$edges, results$p, results$pi, results$classes)
 
-test_that("bernoulli incoherent subgraph estimator approximates the correct set of edges", {
-  expect_true(all(c(1, 6, 11, 16, 21) %in% classifier_res$edges[1:5]))
-})
-
-test_that("bernoulliincoherent subgraph classifier runs properly for simple test data", {
+test_that("bernoulli incoherent subgraph classifier runs properly for simple test data", {
   # tests constructed directly from the model
   # verify that each "cluster" has the same label
   expect_equal(classifier_res$Yhat[1:n], rep(classifier_res$Yhat[1], n))
@@ -107,16 +106,17 @@ Y[1:n] <- 0
 Y[(n+1):(2*n)] <- 1
 
 # approximate estimators and contingency table
-results <- sg.bern.subgraph_train(samp, Y, tstat = "fisher")
+results <- sg.bern.subgraph_train(samp, Y, 6, coherent=2, tstat = "fisher")
+
+test_that("bernoulli coherent subgraph estimator approximates the correct set of edges", {
+  expect_true(all(c(1, 11, 16, 3, 8, 18) %in% results$edges[1:6]))
+})
 
 test <- array(NaN, dim=c(xdim, ydim, n*2))
 test[,,1:n] <- sg.bern.sample_graph(p[,,1], s=n)
 test[,,(n+1):(2*n)] <- sg.bern.sample_graph(p[,,2], s=n)
 
-classifier_res <- sg.bern.subgraph_classifier(test, results$stats, results$p, results$pi, 6,
-                                              results$classes, coherent = 2)
+classifier_res <- sg.bern.subgraph_classifier(test, results$edges, results$p, results$pi,
+                                              results$classes)
 
-test_that("bernoulli coherent subgraph estimator approximates the correct set of edges", {
-  expect_true(all(c(1, 11, 16, 3, 8, 18) %in% classifier_res$edges[1:6]))
-})
 
