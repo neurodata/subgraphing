@@ -17,7 +17,7 @@
 #' @export
 #' @seealso \code{\link{sg.bern.compute_graph_statistics}}
 #'
-sg.bern.xval_classifier <- function(samp, Y, nedges, coherent=FALSE, tstat="fisher", xval="loo", folds=NaN) {
+sg.bern.xval_classifier <- function(samp, Y, nedge, coherent=FALSE, tstat="fisher", xval="loo", folds=NaN) {
 
   if(is.list(samp)) {
     samp <- fmriu.list2array(samp)  # convert to a array for standardization
@@ -40,36 +40,31 @@ sg.bern.xval_classifier <- function(samp, Y, nedges, coherent=FALSE, tstat="fish
   subgraphs <- list()
 
   if (xval == "loo") {
-    results <- data.frame(method=c(), nedges=c(), coherent=c(), test=c(), error=c())
     # iterate over the element that is going to be held out
-    for (e in 1:length(nedges)) {
-      nedge <- nedges[e]
-      er <- 0
-      for (i in 1:s) {
-        # split into training and validation sets
-        splits <- sg.xval_split_data(samp, Y, i)
-        train_set <- splits$train_set
-        train_y <- splits$train_y
-        test_set <- splits$test_set
-        test_y <- splits$test_y
+    er <- 0
+    for (i in 1:s) {
+      # split into training and validation sets
+      splits <- sg.xval_split_data(samp, Y, i)
+      train_set <- splits$train_set
+      train_y <- splits$train_y
+      test_set <- splits$test_set
+      test_y <- splits$test_y
+      # estimators for graph
+      sg_ests <- sg.bern.subgraph_train(samp = train_set, Y = train_y, nedge, coherent=coherent, tstat=tstat)
 
-        # estimators for graph
-        sg_ests <- sg.bern.subgraph_train(samp = train_set, Y = train_y, nedge, coherent=coherent, tstat=tstat)
-
-        # classify the testing data and produce accuracy summary
-        test_pred <- sg.bern.subgraph_classifier(test_set, sg_ests$edges, sg_ests$p, sg_ests$pi, sg_ests$classes)
-        if (test_pred$Yhat[1] != test_y[1]) {
-          er <- er + 1  # classification mistake, so increment error counter
-        }
+      # classify the testing data and produce accuracy summary
+      test_pred <- sg.bern.subgraph_classifier(test_set, sg_ests$edges, sg_ests$p, sg_ests$pi, sg_ests$classes)
+      if (test_pred$Yhat[1] != test_y[1]) {
+        er <- er + 1  # classification mistake, so increment error counter
       }
-      er <- er/s  # error is number of misclassifications / number of possible samples
-      # train the model on the full data for the actual result
-      sg_ests <- sg.bern.subgraph_train(samp, Y, nedge, coherent=coherent, tstat=tstat)
-      subgraphs[[e]] <- list(method="loo", nedges=nedge, coherent=coherent, n=s,
-                             test=tstat, error=er, edges=sg_ests$edges)
     }
+    er <- er/s  # error is number of misclassifications / number of possible samples
+    # train the model on the full data for the actual result
+    sg_ests <- sg.bern.subgraph_train(samp, Y, nedge, coherent=coherent, tstat=tstat)
+    result <- list(method="loo", nedges=nedge, coherent=coherent, n=s,
+                  test=tstat, folds=NaN, error=er, edges=sg_ests$edges)
   } else {
     stop('You have passed an unsupported cross-validatioon method.')
   }
-  return(subgraphs)
+  return(result)
 }

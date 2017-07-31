@@ -25,8 +25,9 @@ In this tutorial, we discuss our estimator of a bernoulli distribution per edge 
 
 + $\mathbb{G}: \Omega \rightarrow \mathcal{G}$ is a graph-valued RV with samples $G_i \sim \mathbb{G}$
 + For each $G_i \in \mathcal{G}$, we have $G_i = (V, E_i)$; that is, each $G_i$ is defined by a set of vertices $V$ and a set of edges $E_i$, where $w_i: V \times V \rightarrow \{0, 1\}$, and $w_i(e_{uv}) \in \{0, 1\}$. That is, each graph has binary edges.
-+ $\mathbb{A}: \Omega \rightarrow \mathcal{A}$, a adjacency-matrix-valued RV with samples $A_i \sim \mathbb{A}$, where $\mathcal{A}$ is the space of possible adjacency-matrices and $A_i \in \mathcal{A}$.
-+ $A_i \in \mathcal{A}$, and $\mathcal{A} \subseteq \mathbb{R}^{V \times V}$. 
++ We have a collection of classes $\mathcal{Y}$ where the collection of graphs in class $y_i$ have a class-conditional difference with the collection of graphs in class $y_j$ for $i \neq j$.
++ $\mathbb{A}_y: \Omega \rightarrow \mathcal{A}_y$, a adjacency-matrix-valued RV with samples $A_{i | y_i = y} \sim \mathbb{A}_y$, where $\mathcal{A}_y$ is the space of possible adjacency-matrices and $A_{i | y_i = y} \in \mathcal{A}_y$.
++ $A_{i | y_i = y} \in \mathcal{A}_y$, and $\mathcal{A}_y \subseteq \mathbb{R}^{V \times V}$. 
 + Each graph $G_i$ can be represented as an adjacency-matrix $A_i$.
 + Within each graph, there exists some collection of edges $\mathcal{S}$ called the subgraph that contain the bulk of the class differences.
 
@@ -125,7 +126,7 @@ Additionally, we can estimate a $p$ value using Monte Carlo permutations. We per
 During our simulations, since we are constructing simulated data, we will know ahead of time whether an edge is or is not part of the subgraph. To quantify this performance, we consider the edge-misclassification rate:
 
 \begin{align}
-  R_n^x &= \frac{1}{|\mathcal{S}|} \sum_{(u, v) \in \mathcal{S}}\mathbb{I}\left\{(u, v) \notin \mathcal{\hat{S}}\right\}
+  R_n^x &= \frac{1}{\left|\mathcal{S}\right|} \sum_{(u, v) \in \mathcal{S}}\mathbb{I}\left\{(u, v) \notin \hat\mathcal{S}}\right\}
 \end{align}
 
 or the fraction of edges that are part of the true subgraph $\mathcal{S}$ but not the estimated subgraph $\mathcal{\hat{S}}$.
@@ -134,7 +135,7 @@ or the fraction of edges that are part of the true subgraph $\mathcal{S}$ but no
 
 ## Easy Simulation
 
-In our basic simulation, we will use 2 classes with 3x3 probability matrices. The probability matrix for each class will be identical, except for 4 randomly selected edges, in which the probability for class 1 will be .25, and the probability for class 2 will be .75. 
+In our basic simulation, we will use 2 classes with 4x4 probability matrices. The probability matrix for each class will be identical, except for 4 randomly selected edges, in which the probability for class 1 will be .25, and the probability for class 2 will be .75. 
 
 ```{r, fig.width=12, fig.height=4}
 require(subgraphing)
@@ -212,20 +213,21 @@ In this simulation, we will structure our trials very similarly to the previous,
 
 ```{r, fig.height=4, fig.width=12}
 ns <- lseq(20, 600, 8)
-nes <- c(2, 4, 6, 8, 10)
+nes <- c(3, 6, 9)
 
 dim <- 4
 
 p <- array(runif(dim^2), dim=c(dim, dim))  # p is initially random
 edges <- sample(1:dim^2, 6, replace = FALSE)  # select 6 random edges
-p1 <- p + rnorm(dim^2, mean=0, sd=.1); p2 <- p + rnorm(dim^2, mean=0, sd=.1)  # initialize p1 and p2 to the same array with some noise
-
-p1[p1 > 1] <- 1; p1[p1 < 0] <- 0; p2[p2 > 1] <- 1; p2[p2 < 0] <- 0
+p1 <- p; p2 <- p # initialize p1 and p2 to the same array with some noise
 
 for (edge in edges) {
   p1[edge] <- .3
   p2[edge] <- .7
 }
+p1 <- p1 + rnorm(dim^2, mean=0, sd=.1); p2 <- p2 + rnorm(dim^2, mean=0, sd=.1)
+
+p1[p1 > 1] <- 1; p1[p1 < 0] <- 0; p2[p2 > 1] <- 1; p2[p2 < 0] <- 0
 
 p <- array(NaN, dim=c(dim, dim, 2))
 p[,,1] <- p1
@@ -242,17 +244,61 @@ multiplot(plot_p1, plot_p2, plot_sg, cols = 3)
 
 Again, our task appears to be fairly simple, but it should prove far more difficult than our previous task due to the fact that there now exists a class-conditional difference in the non-signal edges as well, although slight. 
 
-```{r}
-
-results <- data.frame(n=c(), error=c(), mis_edge=c())
-for (n in ns) {
-  samp <- array(NaN, dim=c(dim, dim, n*2))
-  samp[,,1:n] <- sg.bern.sample_graph(p[,,1], s=n)
-  samp[,,(n+1):(2*n)] <- sg.bern.sample_graph(p[,,2], s=n)
+```{r, fig.height=4, fig.width=12}
+results <- data.frame(n=c(), nedges=c(), error=c(), miss_edge=c())
+for (sim in 1:10) {
   
-  Y <-array(NaN, dim=c(n*2))
-  Y[1:n] <- 0
-  Y[(n+1):(2*n)] <- 1
-  sg.bern.xval_classifier(samp=samp, Y=Y, nedges=nes, tstat="fisher", coherent = FALSE, xval="loo")
+  p <- array(runif(dim^2), dim=c(dim, dim))  # p is initially random
+  edges <- sample(1:dim^2, 6, replace = FALSE)  # select 6 random edges
+  p1 <- p; p2 <- p # initialize p1 and p2 to the same array with some noise
+  
+  for (edge in edges) {
+    p1[edge] <- .3
+    p2[edge] <- .7
+  }
+  p1 <- p1 + rnorm(dim^2, mean=0, sd=.1); p2 <- p2 + rnorm(dim^2, mean=0, sd=.1)
+  
+  p1[p1 > 1] <- 1; p1[p1 < 0] <- 0; p2[p2 > 1] <- 1; p2[p2 < 0] <- 0
+  
+  p <- array(NaN, dim=c(dim, dim, 2))
+  p[,,1] <- p1
+  p[,,2] <- p2
+  for (n in ns) {
+    samp <- array(NaN, dim=c(dim, dim, n*2))
+    samp[,,1:n] <- sg.bern.sample_graph(p[,,1], s=n)
+    samp[,,(n+1):(2*n)] <- sg.bern.sample_graph(p[,,2], s=n)
+    
+    Y <-array(NaN, dim=c(n*2))
+    Y[1:n] <- 0
+    Y[(n+1):(2*n)] <- 1
+    for (ne in nes) {
+      class_res <- sg.bern.xval_classifier(samp=samp, Y=Y, nedge=ne, tstat="fisher", coherent = FALSE, xval="loo")
+      miss_edge <- 1 - 1/length(edges)*sum(edges %in% class_res$edges)
+      results <- rbind(results, data.frame(n=n, nedges=ne, error=class_res$error, miss_edge=miss_edge))    
+    }
+  }
 }
+```
+
+and we plot the missed edge rate and the leave-one-out cross validated error:
+
+```{r, fig.height=4, fig.width=12}
+results$nedges <- factor(results$nedges)
+me_plot <- ggplot(results, aes(x=n, y=miss_edge, color=nedges, group=nedges)) +
+  geom_point() +
+  stat_summary(fun.y = mean, geom = "line", size=2) +
+  stat_summary(fun.data = mean_se, geom = "errorbar") +
+  ggtitle("Proportion of Subgraph Edges Missed by Subgraph Estimator") +
+  xlab("Number of Training Examples per Class") +
+  ylab("Missed-Edge Rate")
+
+xv_plot <- ggplot(results, aes(x=n, y=error, color=nedges, group=nedges)) +
+  geom_point() +
+  stat_summary(fun.y = mean, geom = "line", size=2) +
+  stat_summary(fun.data = mean_se, geom = "errorbar") +
+  ggtitle("Error of Model Estimated with Leave-One-Out Cross Validation") +
+  xlab("Number of Training Examples per Class") +
+  ylab("Cross-Validated Error")
+
+multiplot(me_plot, xv_plot, cols=2)
 ```
