@@ -78,22 +78,25 @@ ydim <- 5
 c <- 2  # number of classes
 p <- array(NaN, dim=c(xdim, ydim, c))
 
-# should end up with 1, 11, 16, 3, 8, 18 since vertices 1 and 3 will be our signal vertices
+# should end up with 1, 3, 6, 8 since vertices 1 and 3 will be our signal vertices
 # edges 19 and 20 are noise to make sure that our method works appropriately and only
 # ends up with edges from signal vertices
-edges <- c(1, 11, 16, 3, 8, 18, 19, 20)
+signal_edges <- c(1, 13, 3)
+noise_edges <- c(20)
 p1 <- array(runif(xdim*ydim), dim=c(xdim, ydim))
+p1[upper.tri(p1, diag=FALSE)] <- 0
 p2 <- p1
-for (i in 1:length(edges)) {
-  e <- edges[i]
-  if (i %% 2 == 0) {
-    p1[e] <- 0
-    p2[e] <- 1
-  } else {
-    p1[e] <- 1
-    p2[e] <- 0
-  }
+for (e in signal_edges) {
+  p1[e] <- .2
+  p2[e] <- .8
 }
+
+for (e in noise_edges) {
+  p1[e] <- 0
+  p2[e] <- 1
+}
+
+p1 <- p1 + t(p1) - diag(diag(p1)); p2 <- p2 + t(p2) - diag(diag(p2))
 p[,,1] <- p1
 p[,,2] <- p2
 
@@ -106,10 +109,12 @@ Y[1:n] <- 0
 Y[(n+1):(2*n)] <- 1
 
 # approximate estimators and contingency table
-results <- sg.bern.subgraph_train(samp, Y, 6, coherent=2, tstat = "fisher")
+results <- sg.bern.subgraph_train(samp, Y, 4, coherent=2, tstat = "fisher")
 
 test_that("bernoulli coherent subgraph estimator approximates the correct set of edges", {
-  expect_true(all(c(1, 11, 16, 3, 8, 18) %in% results$edges[1:6]))
+  # the signal edges we placed manually should be in the resulting edges, since the noise edge
+  # we added was not at a signal vertex
+  expect_true(all(c(1, 3, 13, 11) %in% results$edges[1:4]))
 })
 
 test <- array(NaN, dim=c(xdim, ydim, n*2))
