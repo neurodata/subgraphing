@@ -47,6 +47,7 @@ sg.beta.sample_graph <- function(alpha, beta, s=10, type="array") {
 #' @param p a [n x n] matrix indicating the alphas of each edge.
 #' @param n the number of graphs to sample.
 #' @param type an option of "list" or "array" (default) for the format of the output.
+#' @param rewire the probability of arbitrarily rewiring edges.
 #' @return sample the graph observations from the given beta distribution.
 #'     - if type == "list", returns a p element list of [n x m] observations.
 #'     - if type == "array" (default), returns a [n x m x s] element array where the 3rd dimension indexes the observations.
@@ -54,7 +55,7 @@ sg.beta.sample_graph <- function(alpha, beta, s=10, type="array") {
 #' @export
 #' @seealso \code{\link{list2array}} \code{\link{array2list}}
 #'
-sg.bern.sample_graph <- function(p, s=10, type="array") {
+sg.bern.sample_graph <- function(p, s=10, type="array", rewire=NaN) {
   dims <- dim(p)
   n <- dims[1]
   m <- dims[2]
@@ -68,7 +69,14 @@ sg.bern.sample_graph <- function(p, s=10, type="array") {
   # if x[,,i] < p, edge gets a 1, 0 otherwise
   # multiply by 1 to cast the logical array to numeric
   # apply over the third dimension (number of subjects) and reshape
-  samp <- array(apply(samp, 3, function(x) 1*(x < p)), dim=c(n, m, s))
+  samp <- array(apply(samp, 3, function(x) {
+      obs <- 1*(x < p)
+      if (!is.nan(rewire)) {  # if rewire arg is passed in, we want to randomly connect or disconnect edges with p=rewire
+        obs <- obs + 1*(runif(n*m) < rewire)  # uniform [0, 1) RV with probability p of being less than p
+        obs[obs > 1] <- 0  # if any connected edges are incremented, should reset to disconnected
+      }
+      return(obs)
+    }), dim=c(n, m, s))
 
   if (type == "array") {
     return(samp)

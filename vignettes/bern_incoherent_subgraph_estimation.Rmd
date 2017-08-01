@@ -302,3 +302,17 @@ xv_plot <- ggplot(results, aes(x=n, y=error, color=nedges, group=nedges)) +
 
 multiplot(me_plot, xv_plot, cols=2)
 ```
+
+Intuitively, we can see that more training examples asymptotically decreases our missed0-edge rate and cross-validated error, and choosing more subgraph edges gives us better ability to capture the variation that may be in the data due to signal or consistent class-to-class noise (due to us adding the normally distributed 0-mean gaussian noise to our probability matrices). We see that using 3 edges versus 6 edges gives us a significant difference in our performance metrics, which makes sense as with 4 edges we are not capturing all of our signal edges completely. When we jump from 6 edges to 9 edges in our subgraph, we see only modest improvements, which makes sense as our entire subgraph is only 6 edges total, but 9 edges can still capture some of the class-conditional noise that is also present in our probability matrices. 
+
+## Negative Example
+
+In this example, we will explore a situation that an incoherent subgraph classifier will not be able to appropriately handle. Consider the case where we have a far more subtle class-conditional variation, and the bulk of the class-conditional variation captured by only the edges incident a smaller number of our vertices known as the signal vertices. This situation, known as a coherent subgraph, allows us to focus on the vertices that matter most, and consider from this subset the edges that matter most (see the vignette for `bern_coherent_subgraph_estimation` for more details). Due to the fact that the incoherent estimator will consider all edges, our signal edges may potentially be due to noise. In this example, we will consider 10 vertex graphs, where 1 vertex has 5 signal edges (the matrix is undirected, so 5 signal edges corresponds to 10 edges in the adjacency matrix) placed randomly between class 1 and class 2. Additionally, with probability $p$ we will rewire (that is, change the connection from connected to unconnected, or vice versa) each edge for each graph. This means that there will be other edges at random that also may look like signal vertices, but these edges (since they are rewired at random) will be purely noise and should not improve our predictive power on successive examples. We would thus expect that our missed-edge rate and leave-one-out cross-validated error will be artificially inflated unless we can account for the fact that most of our signal edges are incident only to one vertex. 
+
+```{r, fig.height=4, fig.width=12}
+
+```
+
+```{r, fig.height=4, fig.width=12}
+
+```
