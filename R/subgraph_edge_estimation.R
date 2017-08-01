@@ -2,16 +2,16 @@
 #'
 #' \code{sg.bern.subgraph_classifier} orders the edges by test statistic results depending on the estimator type specified.
 #'
-#' @param test_results [n x n] the test-statistic results.
+#' @param tstats [n x n] the test-statistic results.
 #' @param e the number of edges to look for, arbitrarily breaking ties as necessary.
 #' @param coherent=FALSE if FALSE, estimate an incoherent subgraph, otherwise an integer indicating the number of vertices in the coherent subgraph.
 #' @return edges [n*n] the edges in the graph ordered by test statistic depending on the estimator type.
 #' @export
 #' @seealso \code{\link{sg.bern.compute_graph_statistics}}
 #'
-sg.bern.subgraph_edge_estimation <- function(test_results, e, coherent=FALSE) {
+sg.bern.subgraph_edge_estimation <- function(tstats, e, coherent=FALSE) {
 
-  dims <- dim(test_results)
+  dims <- dim(tstats)
   n <- dims[1]
   m <- dims[2]
 
@@ -21,7 +21,7 @@ sg.bern.subgraph_edge_estimation <- function(test_results, e, coherent=FALSE) {
 
   if (identical(coherent, FALSE)) {
     # incoherent estimator
-    edges <- sort(test_results, index.return=TRUE)$ix[1:e]  # sort test statistics in ascending order and take first e of them
+    edges <- sort(tstats, index.return=TRUE)$ix[1:e]  # sort test statistics in ascending order and take first e of them
   } else if (is.numeric(coherent)) {
     if (coherent < 1) {
       stop(sprintf("The number of signal vertices you have requested, %d, is less than 1.", coherent))
@@ -29,9 +29,9 @@ sg.bern.subgraph_edge_estimation <- function(test_results, e, coherent=FALSE) {
     coherent = ceiling(coherent)  # in case it is a float we ceil it
     # get the possible edge-wise unique values of significance we can have so we can increment over them
     # start with the lowest and add edges as we go
-    unique_sig <- sort(unique(c(test_results)))
+    unique_sig <- sort(unique(c(tstats)))
     for (sig in unique_sig) {
-      vless <- 1*(test_results <= sig)  # 1s where lower than significance
+      vless <- 1*(tstats <= sig)  # 1s where lower than significance
       # score per vertex is the number of edges per vertex less than the threshold
       vertex_sig <- apply(vless, 1, sum)
       # see if we have (coherent #) vertices whose scores sum to greater than or equal the goal subgraph size
@@ -41,7 +41,7 @@ sg.bern.subgraph_edge_estimation <- function(test_results, e, coherent=FALSE) {
         vertex_subgraph <- array(1, dim=c(n, n))
         # significance scores are btwn 0 and 1 and smaller is what we want, so fill in our subgraph with
         # the true values which will be lower than 1 assuming any entries have a chance to reject the null
-        vertex_subgraph[vsig_ids_topc,] <- test_results[vsig_ids_topc,]
+        vertex_subgraph[vsig_ids_topc,] <- tstats[vsig_ids_topc,]
         # find the top edges from the vertex subgraph as the ones with lowest e significances
         edges <- sort(vertex_subgraph, index.return=TRUE)$ix[1:e]
         break
