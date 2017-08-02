@@ -212,7 +212,7 @@ Given 100 examples per class, we can see that our estimated Ps are very close to
 In this simulation, we will structure our trials very similarly to the previous, however our predictions will not be quite as simple this time. Our true P between class 1 and class 2 will no longer be identical for non-signal edges, as we will add gaussian noise with a cutoff at 0 and 1 (since probabilities cannot exceed 1 nor be lower than 0). We will report cross-validated error and misclassification rate as a function of the number of training examples used, and will also investigate the impact of having an estimate of 2, 4, and 8 signal edges.
 
 ```{r, fig.height=4, fig.width=12}
-ns <- lseq(20, 600, 8)
+ns <- lseq(10, 300, 8)
 nes <- c(3, 6, 9)
 
 dim <- 4
@@ -334,15 +334,17 @@ for (e in noise_edges) {
   p2[e] <- 1
 }
 
-p1 <- p1 + t(p1) - diag(diag(p1)); p2 <- p2 + t(p2) - diag(diag(p2))
+p1 <- p1 + t(p1) - diag(diag(p1)) + rnorm(dim^2, mean=0, sd=.1)
+p2 <- p2 + t(p2) - diag(diag(p2)) + rnorm(dim^2, mean=0, sd=.1)
+p1[p1 > 1] <- 1; p1[p1 < 0] <- 0; p2[p2 > 1] <- 1; p2[p2 < 0] <- 0
 p[,,1] <- p1
 p[,,2] <- p2
 
 ns = 100
 
 samp <- array(NaN, dim=c(xdim, xdim, ns*2))
-samp[,,1:ns] <- sg.bern.sample_graph(p[,,1], s=ns)
-samp[,,(ns+1):(2*ns)] <- sg.bern.sample_graph(p[,,2], s=ns)
+samp[,,1:ns] <- sg.bern.sample_graph(p[,,1], s=ns, rewire=.15)
+samp[,,(ns+1):(2*ns)] <- sg.bern.sample_graph(p[,,2], s=ns, rewire=.15)
 
 Y <-array(NaN, dim=c(ns*2))
 Y[1:ns] <- 0
@@ -352,9 +354,9 @@ Y[(ns+1):(2*ns)] <- 1
 plot_p1 <- fmriu.plot.plot_square(p[,,1], title="True P, class 1", xlabel="vertex", ylabel="vertex", legend="p")
 plot_p2 <- fmriu.plot.plot_square(p[,,2], title="True P, class 2", xlabel="vertex", ylabel="vertex", legend="p")
 sg <- array(0, dim=c(xdim, xdim))
-sg[edges] <- 1
+sg[signal_edges] <- 1
 sg <- sg + t(sg) - diag(diag(sg))
-plot_sg <- fmriu.plot.plot_square(sg, title="Subgraph", xlabel="vertex", ylabel="vertex", legend="edge")
+plot_sg <- fmriu.plot.plot_square(sg, title="True Subgraph", xlabel="vertex", ylabel="vertex", legend="edge")
 multiplot(plot_p1, plot_p2, plot_sg, cols = 3)
 ```
 
@@ -369,8 +371,83 @@ plot_p1 <- fmriu.plot.plot_square(train$p[,,1], title="Est P, class 1", xlabel="
 plot_p2 <- fmriu.plot.plot_square(train$p[,,2], title="Est P, class 2", xlabel="vertex", ylabel="vertex", legend="p")
 estsg <- array(0, dim=c(xdim, xdim))
 estsg[train$edges] <- 1
-plot_sg <- fmriu.plot.plot_square(estsg, title="Subgraph", xlabel="vertex", ylabel="vertex", legend="edge")
+plot_sg <- fmriu.plot.plot_square(estsg, title="Estimated Subgraph", xlabel="vertex", ylabel="vertex", legend="edge")
 multiplot(plot_p1, plot_p2, plot_sg, cols = 3)
 ```
 
-As we can see, we correctly identify edge 1 as a signal vertex, but fail to identify vertex 2 and instead determine vertex 3 to be a signal vertex. 
+As we can see, we correctly identify edge 1 as a signal vertex, but fail to identify vertex 2 and instead determine vertex 3 to be a signal vertex. Let's take a look at how our performance is in a full-simulation setting:
+
+```{r, fig.width=12, fig.height=4}
+ns <- lseq(10, 300, 8)
+nes <- c(3, 6, 9)
+results <- data.frame(n=c(), nedges=c(), error=c(), miss_edge=c())
+for (sim in 1:10) {
+  print(sim)
+  xdim <- 9
+  ydim <- 9
+  c <- 2  # number of classes
+  p <- array(NaN, dim=c(xdim, ydim, c))
+  
+  signal_edges <- c(1, 4, 7, 9, 23, 26, 21)
+  noise_edges <- c(72)
+  p1 <- array(runif(xdim*ydim), dim=c(xdim, ydim))
+  p1[upper.tri(p1, diag=FALSE)] <- 0
+  
+  p2 <- p1
+  for (e in signal_edges) {
+    p1[e] <- .2
+    p2[e] <- .8
+  }
+  
+  for (e in noise_edges) {
+    p1[e] <- 0
+    p2[e] <- 1
+  }
+  
+  p1 <- p1 + t(p1) - diag(diag(p1)) + rnorm(xdim^2, mean=0, sd=.1)
+  p2 <- p2 + t(p2) - diag(diag(p2)) + rnorm(xdim^2, mean=0, sd=.1)
+  p1[p1 > 1] <- 1; p1[p1 < 0] <- 0; p2[p2 > 1] <- 1; p2[p2 < 0] <- 0
+  p[,,1] <- p1
+  p[,,2] <- p2
+  for (n in ns) {
+    samp <- array(NaN, dim=c(xdim, ydim, n*2))
+    samp[,,1:n] <- sg.bern.sample_graph(p[,,1], s=n, rewire=.2)
+    samp[,,(n+1):(2*n)] <- sg.bern.sample_graph(p[,,2], s=n, rewire=.2)
+    
+    Y <-array(NaN, dim=c(n*2))
+    Y[1:n] <- 0
+    Y[(n+1):(2*n)] <- 1
+    for (ne in nes) {
+      class_res <- sg.bern.xval_classifier(samp=samp, Y=Y, nedge=2*ne, tstat="fisher", coherent = FALSE, xval="loo")
+      true_edges <- c(1, 4, 7, 9, 28, 55, 73, 19, 37, 64)
+      miss_edge <- 1 - 1/length(true_edges)*sum(true_edges %in% class_res$edges)
+      results <- rbind(results, data.frame(n=n, nedges=ne, error=class_res$error, miss_edge=miss_edge))    
+    }
+  }
+}
+```
+
+```{r, fig.width=12, fig.height=4}
+results$nedges <- factor(results$nedges)
+me_plot <- ggplot(results, aes(x=n, y=miss_edge, color=nedges, group=nedges)) +
+  geom_point() +
+  stat_summary(fun.y = mean, geom = "line", size=2) +
+  stat_summary(fun.data = mean_se, geom = "errorbar", size=2) +
+  scale_y_continuous(limits = c(0, 1)) +
+  ggtitle("Proportion of Edges Missed by Incoherent Subgraph Estimator") +
+  xlab("Number of Training Examples per Class") +
+  ylab("Missed-Edge Rate")
+
+xv_plot <- ggplot(results, aes(x=n, y=error, color=nedges, group=nedges)) +
+  geom_point() +
+  stat_summary(fun.y = mean, geom = "line", size=2) +
+  stat_summary(fun.data = mean_se, geom = "errorbar", size=2) +
+  scale_y_continuous(limits = c(0, 1)) +
+  ggtitle("Error of Model Estimated with Leave-One-Out Cross Validation") +
+  xlab("Number of Training Examples per Class") +
+  ylab("Cross-Validated Error")
+
+multiplot(me_plot, xv_plot, cols=2)
+```
+
+Our cross-validated error is not bad, however, our missed-edge rate is quite poor. 

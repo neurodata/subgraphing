@@ -55,7 +55,7 @@ sg.beta.sample_graph <- function(alpha, beta, s=10, type="array") {
 #' @export
 #' @seealso \code{\link{list2array}} \code{\link{array2list}}
 #'
-sg.bern.sample_graph <- function(p, s=10, type="array", rewire=NaN) {
+sg.bern.sample_graph <- function(p, s=10, type="array", rewire=NaN, directed=FALSE) {
   dims <- dim(p)
   n <- dims[1]
   m <- dims[2]
@@ -72,7 +72,10 @@ sg.bern.sample_graph <- function(p, s=10, type="array", rewire=NaN) {
   samp <- array(apply(samp, 3, function(x) {
       obs <- 1*(x < p)
       if (!is.nan(rewire)) {  # if rewire arg is passed in, we want to randomly connect or disconnect edges with p=rewire
-        obs <- obs + 1*(runif(n*m) < rewire)  # uniform [0, 1) RV with probability p of being less than p
+        rand_con <- 1*(array(runif(n*m), dim=c(n, m)) < rewire)  # uniform [0, 1)^{n x m} RV with probability p of being less than p
+        rand_con[upper.tri(rand_con, diag=FALSE)] <- 0
+        rand_con <-rand_con + t(rand_con) - diag(diag(rand_con))
+        obs <- obs + rand_con
         obs[obs > 1] <- 0  # if any connected edges are incremented, should reset to disconnected
       }
       return(obs)
