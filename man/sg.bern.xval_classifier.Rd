@@ -4,7 +4,7 @@
 \alias{sg.bern.xval_classifier}
 \title{Cross-Validated Bernoulli Subgraph Classifier}
 \usage{
-sg.bern.xval_classifier(samp, Y, es, coherent = FALSE, tstat = "fisher",
+sg.bern.xval_classifier(samp, Y, nedge, coherent = FALSE, tstat = "fisher",
   xval = "loo", folds = NaN)
 }
 \arguments{
@@ -15,7 +15,7 @@ sg.bern.xval_classifier(samp, Y, es, coherent = FALSE, tstat = "fisher",
 
 \item{Y}{[s] the class labels.}
 
-\item{es}{[z] an array where each element is the number of edges to look for, arbitrarily breaking ties as necessary.}
+\item{nedges}{[z] an array where each element is the number of edges to look for, arbitrarily breaking ties as necessary.}
 
 \item{coherent=FALSE}{if FALSE, estimate an incoherent subgraph, otherwise an integer indicating the number of vertices in the coherent subgraph.}
 

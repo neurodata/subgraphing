@@ -4,7 +4,7 @@
 \alias{sg.bern.subgraph_train}
 \title{Bernoulli Subgraph Train}
 \usage{
-sg.bern.subgraph_train(samp, Y, tstat = "fisher")
+sg.bern.subgraph_train(samp, Y, e, coherent = FALSE, tstat = "fisher")
 }
 \arguments{
 \item{samp}{a list or array of graphs with arbitrary labelling.
@@ -13,6 +13,10 @@ sg.bern.subgraph_train(samp, Y, tstat = "fisher")
 - if samp is an array, then it should be of dimensions [n x n x s].}
 
 \item{Y}{[s] the class labels.}
+
+\item{e}{[1] the number of edges in the subgraph.}
+
+\item{coherent=FALSE}{if FALSE, estimate an incoherent subgraph, otherwise an integer indicating the number of vertices in the coherent subgraph.}
 
 \item{tstat="fisher"}{the test statistic to use. options are fisher's exact ("fisher") and chi-squared ("chisq").}
 }

@@ -137,7 +137,7 @@ or the fraction of edges that are part of the true subgraph $\mathcal{S}$ but no
 
 In our basic simulation, we will use 2 classes with 4x4 probability matrices. The probability matrix for each class will be identical, except for 4 randomly selected edges, in which the probability for class 1 will be .25, and the probability for class 2 will be .75. 
 
-```{r, fig.width=12, fig.height=4}
+```{r, fig.width=6, fig.height=2, warning=FALSE, message=FALSE}
 require(subgraphing)
 require(ggplot2)
 require(reshape2)
@@ -174,7 +174,7 @@ multiplot(plot_p1, plot_p2, plot_sg, cols = 3)
 
 As we can see,  it is quite immediately clear which edges are part of the subgraph, so our classifier should have no issues. We generate 10 simulated examples per class, and examine the results of of our estimators:
 
-```{r, fig.width=12, fig.height=4}
+```{r, fig.width=6, fig.height=2, warning=FALSE, message=FALSE}
 ns = 100
 
 samp <- array(NaN, dim=c(n, n, ns*2))
@@ -211,7 +211,7 @@ Given 100 examples per class, we can see that our estimated Ps are very close to
 
 In this simulation, we will structure our trials very similarly to the previous, however our predictions will not be quite as simple this time. Our true P between class 1 and class 2 will no longer be identical for non-signal edges, as we will add gaussian noise with a cutoff at 0 and 1 (since probabilities cannot exceed 1 nor be lower than 0). We will report cross-validated error and misclassification rate as a function of the number of training examples used, and will also investigate the impact of having an estimate of 2, 4, and 8 signal edges.
 
-```{r, fig.height=4, fig.width=12}
+```{r, fig.height=2, warning=FALSE, message=FALSE, fig.width=6}
 ns <- lseq(10, 300, 8)
 nes <- c(3, 6, 9)
 
@@ -225,6 +225,7 @@ for (edge in edges) {
   p1[edge] <- .3
   p2[edge] <- .7
 }
+
 p1 <- p1 + rnorm(dim^2, mean=0, sd=.1); p2 <- p2 + rnorm(dim^2, mean=0, sd=.1)
 
 p1[p1 > 1] <- 1; p1[p1 < 0] <- 0; p2[p2 > 1] <- 1; p2[p2 < 0] <- 0
@@ -244,7 +245,7 @@ multiplot(plot_p1, plot_p2, plot_sg, cols = 3)
 
 Again, our task appears to be fairly simple, but it should prove far more difficult than our previous task due to the fact that there now exists a class-conditional difference in the non-signal edges as well, although slight. 
 
-```{r, fig.height=4, fig.width=12}
+```{r, fig.height=2, warning=FALSE, message=FALSE, fig.width=6}
 results <- data.frame(n=c(), nedges=c(), error=c(), miss_edge=c())
 for (sim in 1:10) {
   
@@ -282,7 +283,7 @@ for (sim in 1:10) {
 
 and we plot the missed edge rate and the leave-one-out cross validated error:
 
-```{r, fig.height=4, fig.width=12}
+```{r, fig.height=2, warning=FALSE, message=FALSE, fig.width=6}
 results$nedges <- factor(results$nedges)
 me_plot <- ggplot(results, aes(x=n, y=miss_edge, color=nedges, group=nedges)) +
   geom_point() +
@@ -309,7 +310,7 @@ Intuitively, we can see that more training examples asymptotically decreases our
 
 In this example, we will explore a situation that an incoherent subgraph classifier will not be able to appropriately handle. Consider the case where we have a far more subtle class-conditional variation, and the bulk of the class-conditional variation captured by only the edges incident a smaller number of our vertices known as the signal vertices. This situation, known as a coherent subgraph, allows us to focus on the vertices that matter most, and consider from this subset the edges that matter most (see the vignette for `bern_coherent_subgraph_estimation` for more details). Due to the fact that the incoherent estimator will consider all edges, our signal edges may potentially be due to noise. In this example, we will consider 10 vertex graphs, where 1 vertex has 5 signal edges (the matrix is undirected, so 5 signal edges corresponds to 10 edges in the adjacency matrix) placed randomly between class 1 and class 2. Additionally, with probability $p$ we will rewire (that is, change the connection from connected to unconnected, or vice versa) each edge for each graph. This means that there will be other edges at random that also may look like signal vertices, but these edges (since they are rewired at random) will be purely noise and should not improve our predictive power on successive examples. We would thus expect that our missed-edge rate and leave-one-out cross-validated error will be artificially inflated unless we can account for the fact that most of our signal edges are incident only to one vertex. 
 
-```{r, fig.height=4, fig.width=12}
+```{r, fig.height=2, warning=FALSE, message=FALSE, fig.width=6}
 xdim <- 9
 ydim <- 9
 c <- 2  # number of classes
@@ -325,8 +326,8 @@ p1[upper.tri(p1, diag=FALSE)] <- 0
 
 p2 <- p1
 for (e in signal_edges) {
-  p1[e] <- .2
-  p2[e] <- .8
+  p1[e] <- .3
+  p2[e] <- .7
 }
 
 for (e in noise_edges) {
@@ -334,8 +335,8 @@ for (e in noise_edges) {
   p2[e] <- 1
 }
 
-p1 <- p1 + t(p1) - diag(diag(p1)) + rnorm(dim^2, mean=0, sd=.1)
-p2 <- p2 + t(p2) - diag(diag(p2)) + rnorm(dim^2, mean=0, sd=.1)
+p1 <- p1 + t(p1) - diag(diag(p1)) + rnorm(xdim^2, mean=0, sd=.1)
+p2 <- p2 + t(p2) - diag(diag(p2)) + rnorm(xdim^2, mean=0, sd=.1)
 p1[p1 > 1] <- 1; p1[p1 < 0] <- 0; p2[p2 > 1] <- 1; p2[p2 < 0] <- 0
 p[,,1] <- p1
 p[,,2] <- p2
@@ -362,7 +363,7 @@ multiplot(plot_p1, plot_p2, plot_sg, cols = 3)
 
 As we can see from the plot of edges in our theoretically optimal subgraph, the signal vertices are vertices 1 and 2. As we show below, however, using an incoherent estimator does not necessarily return such a favorable output.
 
-```{r, fig.width=12, fig.height=4}
+```{r, fig.width=6, fig.height=2, warning=FALSE, message=FALSE}
 # approximate estimators and contingency table
 train <- sg.bern.subgraph_train(samp, Y, 12, coherent=FALSE, tstat = "fisher")
 
@@ -377,9 +378,9 @@ multiplot(plot_p1, plot_p2, plot_sg, cols = 3)
 
 As we can see, we correctly identify edge 1 as a signal vertex, but fail to identify vertex 2 and instead determine vertex 3 to be a signal vertex. Let's take a look at how our performance is in a full-simulation setting:
 
-```{r, fig.width=12, fig.height=4}
+```{r, fig.width=6, fig.height=2, warning=FALSE, message=FALSE}
 ns <- lseq(10, 300, 8)
-nes <- c(3, 6, 9)
+nes <- c(6, 12, 18)
 results <- data.frame(n=c(), nedges=c(), error=c(), miss_edge=c())
 for (sim in 1:10) {
   print(sim)
@@ -389,36 +390,31 @@ for (sim in 1:10) {
   p <- array(NaN, dim=c(xdim, ydim, c))
   
   signal_edges <- c(1, 4, 7, 9, 23, 26, 21)
-  noise_edges <- c(72)
   p1 <- array(runif(xdim*ydim), dim=c(xdim, ydim))
   p1[upper.tri(p1, diag=FALSE)] <- 0
   
   p2 <- p1
-  for (e in signal_edges) {
-    p1[e] <- .2
-    p2[e] <- .8
+  for (e in c(signal_edges)) {
+    p1[e] <- .3
+    p2[e] <- .7
   }
   
-  for (e in noise_edges) {
-    p1[e] <- 0
-    p2[e] <- 1
-  }
   
-  p1 <- p1 + t(p1) - diag(diag(p1)) + rnorm(xdim^2, mean=0, sd=.1)
-  p2 <- p2 + t(p2) - diag(diag(p2)) + rnorm(xdim^2, mean=0, sd=.1)
+  p1 <- p1 + t(p1) - diag(diag(p1)) + rnorm(xdim^2, mean=0, sd=.15)
+  p2 <- p2 + t(p2) - diag(diag(p2)) + rnorm(xdim^2, mean=0, sd=.15)
   p1[p1 > 1] <- 1; p1[p1 < 0] <- 0; p2[p2 > 1] <- 1; p2[p2 < 0] <- 0
   p[,,1] <- p1
   p[,,2] <- p2
   for (n in ns) {
     samp <- array(NaN, dim=c(xdim, ydim, n*2))
-    samp[,,1:n] <- sg.bern.sample_graph(p[,,1], s=n, rewire=.2)
-    samp[,,(n+1):(2*n)] <- sg.bern.sample_graph(p[,,2], s=n, rewire=.2)
+    samp[,,1:n] <- sg.bern.sample_graph(p[,,1], s=n, rewire=.1)
+    samp[,,(n+1):(2*n)] <- sg.bern.sample_graph(p[,,2], s=n, rewire=.1)
     
     Y <-array(NaN, dim=c(n*2))
     Y[1:n] <- 0
     Y[(n+1):(2*n)] <- 1
     for (ne in nes) {
-      class_res <- sg.bern.xval_classifier(samp=samp, Y=Y, nedge=2*ne, tstat="fisher", coherent = FALSE, xval="loo")
+      class_res <- sg.bern.xval_classifier(samp=samp, Y=Y, nedge=ne, tstat="fisher", coherent = FALSE, xval="loo")
       true_edges <- c(1, 4, 7, 9, 28, 55, 73, 19, 37, 64)
       miss_edge <- 1 - 1/length(true_edges)*sum(true_edges %in% class_res$edges)
       results <- rbind(results, data.frame(n=n, nedges=ne, error=class_res$error, miss_edge=miss_edge))    
@@ -427,7 +423,7 @@ for (sim in 1:10) {
 }
 ```
 
-```{r, fig.width=12, fig.height=4}
+```{r, fig.width=6, fig.height=2, warning=FALSE, message=FALSE}
 results$nedges <- factor(results$nedges)
 me_plot <- ggplot(results, aes(x=n, y=miss_edge, color=nedges, group=nedges)) +
   geom_point() +

@@ -4,10 +4,10 @@
 \alias{sg.bern.subgraph_edge_estimation}
 \title{Bernoulli Subgraph Edge Estimation}
 \usage{
-sg.bern.subgraph_edge_estimation(test_results, e, coherent = FALSE)
+sg.bern.subgraph_edge_estimation(tstats, e, coherent = FALSE)
 }
 \arguments{
-\item{test_results}{[n x n] the test-statistic results.}
+\item{tstats}{[n x n] the test-statistic results.}
 
 \item{e}{the number of edges to look for, arbitrarily breaking ties as necessary.}
 

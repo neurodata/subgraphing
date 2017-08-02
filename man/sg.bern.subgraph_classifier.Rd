@@ -4,7 +4,7 @@
 \alias{sg.bern.subgraph_classifier}
 \title{Bernoulli Subgraph Classifier}
 \usage{
-sg.bern.subgraph_classifier(test, stats, p, pi, e, classes, coherent = FALSE)
+sg.bern.subgraph_classifier(test, edges, p, pi, classes)
 }
 \arguments{
 \item{test}{the test array to generate labels for.
@@ -16,11 +16,7 @@ sg.bern.subgraph_classifier(test, stats, p, pi, e, classes, coherent = FALSE)
 
 \item{pi}{[c] the pi vector probability of each class occuring.}
 
-\item{e}{[1] the number of edges in the subgraph.}
-
 \item{classes}{the labels for the classes as ordered in the pi and p arrays.}
-
-\item{coherent=FALSE}{if FALSE, estimate an incoherent subgraph, otherwise an integer indicating the number of vertices in the coherent subgraph.}
 }
 \value{
 edges [e] the edges present in the subgraph.

@@ -4,12 +4,15 @@
 \alias{sg.bern.sample_graph}
 \title{Sample Graphs from Bernoulli Distribution}
 \usage{
-sg.bern.sample_graph(p, s = 10, type = "array")
+sg.bern.sample_graph(p, s = 10, type = "array", rewire = NaN,
+  directed = FALSE)
 }
 \arguments{
 \item{p}{a [n x n] matrix indicating the alphas of each edge.}
 
 \item{type}{an option of "list" or "array" (default) for the format of the output.}
+
+\item{rewire}{the probability of arbitrarily rewiring edges.}
 
 \item{n}{the number of graphs to sample.}
 }
