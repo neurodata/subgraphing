@@ -13,3 +13,7 @@ R -e "devtools::install_github('neurodata/subgraphing')"
 ```
 
 For tutorials on usage, see our html documents:
+
+[bernoulli graph estimators](http://docs.neurodata.io/subgraphing/vignettes/bern_graph_estimation.html)
+[incoherent bernoulli subgraphs](http://docs.neurodata.io/subgraphing/vignettes/bern_incoherent_subgraph_estimation.html)
+[coherent bernoulli subgraphs](http://docs.neurodata.io/subgraphing/vignettes/bern_coherent_subgraph_estimation.html)
