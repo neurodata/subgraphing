@@ -70,7 +70,7 @@ sg.bern.sample_graph <- function(p, s=10, type="array", rewire=NaN, directed=FAL
   # multiply by 1 to cast the logical array to numeric
   # apply over the third dimension (number of subjects) and reshape
   samp <- array(apply(samp, 3, function(x) {
-      obs <- 1*(x < p)
+      obs <- 1*(x < p)  # binary matrix
       if (!is.nan(rewire)) {  # if rewire arg is passed in, we want to randomly connect or disconnect edges with p=rewire
         rand_con <- 1*(array(runif(n*m), dim=c(n, m)) < rewire)  # uniform [0, 1)^{n x m} RV with probability p of being less than p
         rand_con[upper.tri(rand_con, diag=FALSE)] <- 0
