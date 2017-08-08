@@ -81,8 +81,7 @@ Below is bare-bones pseudo code for each method. Note that optional parameters a
 # Inputs
 #   sample: a [n x m x s] element array, where we have s observations of nxm graphs.
 # Outputs
-#   alpha: a [n x m] matrix denoting the alpha parameter per edge.
-#   beta: a [n x m] matrix denoting the beta parameter per edge.
+#   p: a [n x m] matrix denoting the probability parameter per edge.
 sg.bern.graph_estimator(sample, smooth=TRUE):
   p = sum(sample, 3)/s  # sum over the p dimension
   if (smooth) {
@@ -96,8 +95,7 @@ sg.bern.graph_estimator(sample, smooth=TRUE):
 # Inputs
 #   sample: a [s] element vector that is between 0 and 1.
 # Outputs
-#   alpha: the alpha parameter of the method of moments estimate given the sample.
-#   beta: the beta parameter of the method of moments estimate given the sample.
+#   p: the probability parameter MLE per edge given the sample.
 sg.bern.estimator(sample, smooth=TRUE):
   p = sum(sample)/s
   if (smooth) {
@@ -109,7 +107,7 @@ sg.bern.estimator(sample, smooth=TRUE):
   
 # a function to generate random beta-distributed samples.
 # Inputs
-#   p: a [n x m] matrix of the p parameters per edge.
+#   p: a [n x m] matrix of the probability parameters per edge.
 #   s: the number of samples.
 # Outputs
 #   samp: a [n x m x p] array sampling from the [n x m] graph RV p times.
@@ -138,11 +136,11 @@ When evaluating the similarity of two matrices, we will use the frobenius norm o
 
 ## Estimation of Parameters is Consistent
 
-Here, we will verify that our estimator converges for arbitrary random alpha, beta as our number of samples increases, given that our sampling code is correct (see previous section and test code). We are using the method of moments estimators for alpha and beta, and while the method of moments estimators might not necessarily converge as rapidly to the true parameters as the maximum likelihood estimators, they are still consistent.
+Here, we will verify that our estimator converges for arbitrary random $p$ as our number of samples increases, given that our sampling code is correct (see previous section and test code). We are using the Maximum Likelihood Estimators for $p$, which should provide us with estimation of a consistent $\hat{p}$ for $p$. 
 
 ### Visualization
 
-We begin by plotting the estimated alpha, beta and compare to the true alpha, beta for 50 and 1000 observed samples respectively. Due to the fact that the method of moments produces a consistent estimator, we know that our estimated parameters should be closer to the true values with more samples.
+We begin by plotting the estimated $p$ and compare to the true $p$ for 50 and 1000 observed samples respectively. Due to the fact that the MLE produces a consistent estimator, we know that our estimated parameters should be closer to the true values with more samples.
 
 ```{r fig.width=8}
 require(subgraphing)
@@ -192,18 +190,18 @@ params <- plot_param(p, title='True p')
 print(params)
 ```
 
-As we can see, after 1000 samples, our estimate is much closer to the true alpha, beta than at only 50 samples, as we would intuitively expect.
+As we can see, after 1000 samples, our estimate is much closer to the true $p$ than at only 50 samples, as we would intuitively expect.
 
 ### Simulation
 
 For this simulation, we will do as follows:
 
-+ Sample n observations from a 3x3 graph RV where each edge obeys the beta distribution with parameters alpha, beta.
++ Sample n observations from a 3x3 graph RV where each edge obeys the beta distribution with parameters $p$.
 + Histogram bin the values into 20 bins from 0 to 1.
 + Show the average MSE (average over all of the edges) between the density estimation per edge and the true density function per edge approaches 0 as $n \rightarrow \infty$ as a function of n.
-+ Show frobenius norm of difference between estimated alpha and true alpha (likewise for beta) as a function of the number of samples n.
++ Show frobenius norm of difference between estimated $\hat{p}$ and true $p$ as a function of the number of samples n.
 
-We know that by convergence, if we sample a large number of values our sample density should approximate to the true density better and better, and this simulation checks that this property is satisfied. Due to consistency, we expect that as n increases we should get closer and closer approximations of alpha, beta. and as such the difference (frobenius norm of the difference) between the estimated and true alpha, beta should decline. 
+We know that by convergence, if we sample a large number of values our sample density should approximate to the true density better and better, and this simulation checks that this property is satisfied. Due to consistency, we expect that as n increases we should get closer and closer approximations of $p$. and as such the difference (frobenius norm of the difference) between the estimated $\hat{p}$ and true $p$ should decline. 
 
 ```{r fig.width=8}
 n_vec <- lseq(50, 5000, 20)
