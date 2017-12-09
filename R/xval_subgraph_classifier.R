@@ -17,7 +17,7 @@
 #' @export
 #' @seealso \code{\link{sg.bern.compute_graph_statistics}}
 #'
-sg.bern.xval_classifier <- function(samp, Y, nedge, coherent=FALSE, tstat="fisher", xval="loo", folds=NaN) {
+sg.bern.xval_classifier <- function(samp, Y, nedges, coherent=FALSE, tstat="fisher", xval="loo", folds=NaN) {
 
   if(is.list(samp)) {
     samp <- fmriu.list2array(samp)  # convert to a array for standardization
@@ -50,7 +50,7 @@ sg.bern.xval_classifier <- function(samp, Y, nedge, coherent=FALSE, tstat="fishe
       test_set <- splits$test_set
       test_y <- splits$test_y
       # estimators for graph
-      sg_ests <- sg.bern.subgraph_train(samp = train_set, Y = train_y, nedge, coherent=coherent, tstat=tstat)
+      sg_ests <- sg.bern.subgraph_train(samp = train_set, Y = train_y, nedges, coherent=coherent, tstat=tstat)
 
       # classify the testing data and produce accuracy summary
       test_pred <- sg.bern.subgraph_classifier(test_set, sg_ests$edges, sg_ests$p, sg_ests$pi, sg_ests$classes)
@@ -60,9 +60,9 @@ sg.bern.xval_classifier <- function(samp, Y, nedge, coherent=FALSE, tstat="fishe
     }
     er <- er/s  # error is number of misclassifications / number of possible samples
     # train the model on the full data for the actual result
-    sg_ests <- sg.bern.subgraph_train(samp, Y, nedge, coherent=coherent, tstat=tstat)
-    result <- list(method="loo", nedges=nedge, coherent=coherent, n=s,
-                  test=tstat, folds=NaN, error=er, edges=sg_ests$edges)
+    sg_ests <- sg.bern.subgraph_train(samp, Y, nedges, coherent=coherent, tstat=tstat)
+    result <- list(method="loo", nedges=nedges, coherent=coherent, n=s,
+                   test=tstat, folds=NaN, error=er, edges=sg_ests$edges)
   } else {
     stop('You have passed an unsupported cross-validatioon method.')
   }
