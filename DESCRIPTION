@@ -11,10 +11,7 @@ BugReports: https://github.com/neurodata/subgraphing/issues
 Imports:
     fmriutils,
     plyr,
-    abind,
-    ggplot2,
-    reshape2,
-    Rmisc
+    abind
 RoxygenNote: 6.0.1
 Suggests: knitr,
     rmarkdown,
